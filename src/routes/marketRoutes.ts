@@ -120,7 +120,7 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get market by ID
+// Get market by ID - checks database first, then blockchain if not found
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -132,15 +132,46 @@ router.get('/:id', async (req: Request, res: Response) => {
       });
     }
 
-    const market = await prisma.market.findUnique({
+    // First try to find market in database
+    let market = await prisma.market.findUnique({
       where: { id }
     });
 
+    let marketSource = 'database';
+    // If market not found in database, try to check/create from blockchain
     if (!market) {
-      return res.status(404).json({
-        success: false,
-        message: 'Market not found'
-      });
+      // Convert string ID to number for checkOrCreateMarket function
+      const marketId = parseInt(id);
+      
+      if (isNaN(marketId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid market ID. Must be a valid number'
+        });
+      }
+
+      console.log(`🔍 Market ${id} not found in database, checking blockchain...`);
+      
+      try {
+        // Call the checkOrCreateMarket function
+        market = await checkOrCreateMarket(marketId);
+        
+        if (!market) {
+          return res.status(404).json({
+            success: false,
+            message: 'Market not found in database or blockchain'
+          });
+        }
+        marketSource = 'blockchain';
+        console.log(`✅ Market ${id} retrieved/created from blockchain successfully`);
+      } catch (blockchainError) {
+        console.error(`❌ Failed to retrieve/create market ${id} from blockchain:`, blockchainError);
+        return res.status(404).json({
+          success: false,
+          message: 'Market not found in database or blockchain',
+          error: blockchainError instanceof Error ? blockchainError.message : 'Unknown blockchain error'
+        });
+      }
     }
 
     // Convert BigInt fields to strings for JSON serialization
@@ -154,7 +185,8 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      data: serializedMarket
+      data: serializedMarket,
+      source: marketSource
     });
 
   } catch (error) {
@@ -167,63 +199,6 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Check or create market by ID
-router.post('/:id', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Market ID is required'
-      });
-    }
-
-    // Convert string ID to number for checkOrCreateMarket function
-    const marketId = parseInt(id);
-    
-    if (isNaN(marketId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid market ID. Must be a valid number'
-      });
-    }
-
-    console.log(`🔍 Checking or creating market with ID: ${marketId}`);
-    
-    // Call the checkOrCreateMarket function
-    const market = await checkOrCreateMarket(marketId);
-
-    if (!market) {
-      return res.status(404).json({
-        success: false,
-        message: 'Failed to check or create market'
-      });
-    }
-
-    // Convert BigInt fields to strings for JSON serialization
-    const serializedMarket = {
-      ...market,
-      votes: market.votes.map(vote => vote.toString()),
-      liquidityParameter: market.liquidityParameter.toString(),
-      tvl: market.tvl.toString(),
-      marketUpdatedAt: market.marketUpdatedAt.toString()
-    };
-
-    return res.json({
-      success: true,
-      message: 'Market checked/created successfully',
-      data: serializedMarket
-    });
-
-  } catch (error) {
-    console.error('Error checking or creating market:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to check or create market',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
 
 export default router;
