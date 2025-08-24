@@ -13,7 +13,7 @@ import heliusRoutes from './routes/heliusRoutes';
 import { errorHandler, notFound } from './middleware/errorHandler';
 
 // Import database configuration
-import { initRedis, closeConnections } from './config/database';
+import { initRedis, closeConnections, checkDatabaseHealth } from './config/database';
 
 // Import Solana event monitor and queue
 import { SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
@@ -124,6 +124,19 @@ const startServer = async () => {
       const errorMessage = redisError instanceof Error ? redisError.message : 'Unknown error';
       console.warn('⚠️  Redis connection failed, continuing without Redis:', errorMessage);
       console.log('💡 Start Redis with: redis-server');
+    }
+
+    // Check database connection
+    try {
+      const isDbHealthy = await checkDatabaseHealth();
+      if (isDbHealthy) {
+        console.log('✅ Database connection check passed');
+      } else {
+        console.warn('⚠️  Database connection check failed');
+      }
+    } catch (dbError) {
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown error';
+      console.warn('⚠️  Database connection check failed, continuing without it:', errorMessage);
     }
 
     // Initialize Solana event monitor
