@@ -20,6 +20,9 @@ import { initRedis, closeConnections, checkDatabaseHealth } from './config/datab
 import { SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
 import { processSolanaEvent } from './services/solanaEventQueueProcessor';
 
+// Import cron service
+import cronService from './services/cronService';
+
 // Load environment variables
 dotenv.config();
 
@@ -91,6 +94,7 @@ app.get('/', (_req, res) => {
       helius: '/api/helius',
       webhook: '/api/helius/webhook',
       markets: '/api/markets',
+      cron: '/health/cron',
     },
   });
 });
@@ -106,6 +110,7 @@ process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully');
   await closeConnections();
   await solanaEventQueue.close();
+  cronService.shutdown();
   process.exit(0);
 });
 
@@ -113,6 +118,7 @@ process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully');
   await closeConnections();
   await solanaEventQueue.close();
+  cronService.shutdown();
   process.exit(0);
 });
 
@@ -175,6 +181,15 @@ const startServer = async () => {
       console.warn('⚠️  Solana event queue processor failed, continuing without it:', errorMessage);
     }
 
+    // Initialize cron service
+    try {
+      cronService.startAllJobs();
+      console.log('✅ Cron service started successfully');
+    } catch (cronError) {
+      const errorMessage = cronError instanceof Error ? cronError.message : 'Unknown error';
+      console.warn('⚠️  Cron service failed to start, continuing without it:', errorMessage);
+    }
+
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
@@ -186,6 +201,7 @@ const startServer = async () => {
         console.log(`🔗 Solana monitoring: Active`);
       }
       console.log(`📋 Solana event queue: Active`);
+      console.log(`⏰ Cron service: Active`);
     });
 
   } catch (error) {

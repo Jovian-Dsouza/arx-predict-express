@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { checkDatabaseHealth } from '../config/database';
 import { redisClient } from '../config/database';
+import cronService from '../services/cronService';
 
 // Global reference to the Solana monitor (will be set from app.ts)
 declare global {
@@ -53,6 +54,22 @@ router.get('/detailed', async (_req: Request, res: Response) => {
       solanaHealth = false;
     }
 
+    // Check cron service health
+    let cronHealth = false;
+    let cronDetails = null;
+    try {
+      const jobStatus = cronService.getJobStatus();
+      cronHealth = jobStatus.length > 0 && jobStatus.some(job => job.isRunning);
+      cronDetails = {
+        totalJobs: jobStatus.length,
+        runningJobs: jobStatus.filter(job => job.isRunning).length,
+        jobs: jobStatus
+      };
+    } catch (cronError) {
+      console.warn('Cron service health check failed:', cronError);
+      cronHealth = false;
+    }
+
     const healthStatus = {
       success: true,
       timestamp: new Date().toISOString(),
@@ -72,6 +89,11 @@ router.get('/detailed', async (_req: Request, res: Response) => {
           timestamp: new Date().toISOString(),
           details: solanaDetails
         },
+        cron: {
+          status: cronHealth ? 'healthy' : 'unhealthy',
+          timestamp: new Date().toISOString(),
+          details: cronDetails
+        }
       },
       system: {
         memory: process.memoryUsage(),
@@ -81,7 +103,7 @@ router.get('/detailed', async (_req: Request, res: Response) => {
       },
     };
 
-    const overallHealth = dbHealth && redisHealth && solanaHealth;
+    const overallHealth = dbHealth && redisHealth && solanaHealth && cronHealth;
     const statusCode = overallHealth ? 200 : 503;
 
     return res.status(statusCode).json(healthStatus);
@@ -170,6 +192,34 @@ router.get('/solana', (_req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Solana monitoring health check error:', error);
+    return res.status(503).json({
+      success: false,
+      status: 'unhealthy',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+// Cron service status check
+router.get('/cron', (_req: Request, res: Response) => {
+  try {
+    const jobStatus = cronService.getJobStatus();
+    const isHealthy = jobStatus.length > 0 && jobStatus.some(job => job.isRunning);
+    
+    return res.status(200).json({
+      success: true,
+      status: isHealthy ? 'healthy' : 'unhealthy',
+      timestamp: new Date().toISOString(),
+      details: {
+        totalJobs: jobStatus.length,
+        runningJobs: jobStatus.filter(job => job.isRunning).length,
+        jobs: jobStatus
+      }
+    });
+
+  } catch (error) {
+    console.error('Cron service health check error:', error);
     return res.status(503).json({
       success: false,
       status: 'unhealthy',
