@@ -13,10 +13,10 @@ model Market {
   question                              String
   options                               String[]
   probs                                 Float[]
-  votes                                 Int[]
-  liquidityParameter                    Float
+  votes                                 BigInt[] 
+  liquidityParameter                    BigInt
   mint                                  String
-  tvl                                   Float
+  tvl                                   BigInt
   status                                String
   marketUpdatedAt                       BigInt
   winningOption                         Int?
