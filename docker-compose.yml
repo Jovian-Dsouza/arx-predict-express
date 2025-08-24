@@ -16,8 +16,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - arx-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U arx_user -d arx_predict_db"]
       interval: 10s
@@ -35,8 +33,6 @@ services:
       - redis_data:/data
       - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
     command: redis-server /usr/local/etc/redis/redis.conf
-    networks:
-      - arx-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -123,9 +119,9 @@ volumes:
   # pgadmin_data:
   #   driver: local
 
-networks:
-  arx-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+# networks:
+#   arx-network:
+#     driver: bridge
+#     ipam:
+#       config:
+#         - subnet: 172.20.0.0/16
