@@ -9,6 +9,7 @@ A robust Express.js server built with TypeScript, featuring Redis, PostgreSQL (w
 - **Redis** - High-performance caching and session storage
 - **Ably Chat** - Real-time chat functionality with channels
 - **Helius Integration** - Solana blockchain webhook processing
+- **Price Service** - Redis-based market price history tracking with automatic cleanup
 - **Security** - Helmet, CORS, rate limiting, and validation
 - **Health Monitoring** - Comprehensive health checks for all services
 - **Error Handling** - Centralized error handling with detailed logging
@@ -200,6 +201,14 @@ A robust Express.js server built with TypeScript, featuring Redis, PostgreSQL (w
 - `GET /api/helius/transaction/:signature` - Get transaction details
 - `GET /api/helius/account/:account` - Get account info
 
+### Market & Price Endpoints
+
+- `GET /api/markets` - Get all markets
+- `GET /api/markets/:id` - Get specific market details
+- `GET /api/prices/markets/:marketId` - Get market price history
+- `GET /api/prices/markets/:marketId?option=0` - Get option-specific price history
+- `GET /api/prices/markets` - Get all markets with price data
+
 ## 🔗 Helius Webhook Setup
 
 1. **Get your Helius API key** from [helius.xyz](https://helius.xyz)
@@ -248,6 +257,39 @@ curl -X POST http://localhost:3000/api/chat/send \
 
 # Get chat history
 curl http://localhost:3000/api/chat/history/general
+```
+
+## 💰 Price Service
+
+The server includes a Redis-based price service for tracking market price history:
+
+- **Automatic Price Storage**: Stores probabilities from `revealProbsEvent` Solana events
+- **Smart Cleanup**: Automatically maintains max 100 entries per market, dropping oldest first
+- **Option-Specific Queries**: Get price history for specific market options
+- **Real-time Updates**: Prices are stored as events are processed
+
+### API Endpoints
+
+- `GET /api/prices/markets/:marketId` - Get all price history for a market
+- `GET /api/prices/markets/:marketId?option=0` - Get price history for a specific option
+- `GET /api/prices/markets` - Get list of all markets with price data
+- `DELETE /api/prices/markets/:marketId` - Clear price data for a market
+- `GET /api/prices/health` - Price service health check
+
+### Usage Examples
+
+```bash
+# Get all prices for market "123"
+curl http://localhost:3000/api/prices/markets/123
+
+# Get prices for option 0 of market "123"
+curl http://localhost:3000/api/prices/markets/123?option=0
+
+# Get list of all markets with price data
+curl http://localhost:3000/api/prices/markets
+
+# Test the price service
+npm run test:price
 ```
 
 ## 📊 Monitoring

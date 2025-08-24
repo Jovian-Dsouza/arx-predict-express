@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import healthRoutes from './routes/healthRoutes';
 import heliusRoutes from './routes/heliusRoutes';
 import marketRoutes from './routes/marketRoutes';
+import priceRoutes from './routes/priceRoutes';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler';
@@ -80,6 +81,7 @@ app.use('/health', healthRoutes);
 // API routes
 app.use('/api/helius', heliusRoutes);
 app.use('/api/markets', marketRoutes);
+app.use('/api/prices', priceRoutes);
 
 // Root route
 app.get('/', (_req, res) => {
@@ -88,15 +90,16 @@ app.get('/', (_req, res) => {
     message: 'Arx Predict Express Server',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    endpoints: {
-      health: '/health',
-      chat: '/api/chat',
-      helius: '/api/helius',
-      webhook: '/api/helius/webhook',
-      markets: '/api/markets',
-      cron: '/health/cron',
-      wallet: '/health/wallet',
-    },
+          endpoints: {
+        health: '/health',
+        chat: '/api/chat',
+        helius: '/api/helius',
+        webhook: '/api/helius/webhook',
+        markets: '/api/markets',
+        prices: '/api/prices',
+        cron: '/health/cron',
+        wallet: '/health/wallet',
+      },
   });
 });
 

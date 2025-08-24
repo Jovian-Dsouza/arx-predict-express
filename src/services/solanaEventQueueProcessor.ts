@@ -4,6 +4,7 @@ import { prisma } from '../config/database';
 import { BN, IdlEvents } from "@coral-xyz/anchor";
 import { ArxPredict } from '../contract/arx_predict';
 import { invalidateMarketCache } from '../routes/marketRoutes';
+import { PriceService } from './priceService';
 
 type Event = IdlEvents<ArxPredict>; // Commented out as it's not being used
 
@@ -68,6 +69,14 @@ async function handleRevealProbsEvent(timestamp: string, data: Event['revealProb
         lastRevealProbsEventTimestamp: new Date(timestamp)
       }
     });
+    
+    // Store prices in Redis cache
+    try {
+      await PriceService.addMarketPrices(marketId.toString(), timestamp, probs);
+    } catch (priceError) {
+      console.warn(`⚠️ Failed to store prices in cache for market ${marketId}:`, priceError);
+    }
+    
     console.log(`✅ Updated market ${marketId} with reveal probabilities`);
     invalidateMarketCache(marketId.toString());
   } catch (error) {
