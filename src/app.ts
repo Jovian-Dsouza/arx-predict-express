@@ -21,6 +21,9 @@ import { initRedis, closeConnections, checkDatabaseHealth } from './config/datab
 import { SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
 import { processSolanaEvent } from './services/solanaEventQueueProcessor';
 
+// Import Ably service
+import { initializeAbly, closeAblyConnection } from './services/ablyService';
+
 // Import cron service
 import cronService from './services/cronService';
 
@@ -115,6 +118,7 @@ process.on('SIGTERM', async () => {
   await closeConnections();
   await solanaEventQueue.close();
   cronService.shutdown();
+  await closeAblyConnection();
   process.exit(0);
 });
 
@@ -123,6 +127,7 @@ process.on('SIGINT', async () => {
   await closeConnections();
   await solanaEventQueue.close();
   cronService.shutdown();
+  await closeAblyConnection();
   process.exit(0);
 });
 
@@ -150,6 +155,15 @@ const startServer = async () => {
     } catch (dbError) {
       const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown error';
       console.warn('⚠️  Database connection check failed, continuing without it:', errorMessage);
+    }
+
+    // Initialize Ably service
+    try {
+      await initializeAbly();
+      console.log('✅ Ably service initialized successfully');
+    } catch (ablyError) {
+      const errorMessage = ablyError instanceof Error ? ablyError.message : 'Unknown error';
+      console.warn('⚠️  Ably service failed to initialize, continuing without it:', errorMessage);
     }
 
     // Initialize Solana event monitor

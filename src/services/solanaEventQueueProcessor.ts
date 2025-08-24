@@ -5,6 +5,7 @@ import { BN, IdlEvents } from "@coral-xyz/anchor";
 import { ArxPredict } from '../contract/arx_predict';
 import { invalidateMarketCache } from '../routes/marketRoutes';
 import { PriceService } from './priceService';
+import { broadcastRevealProbs } from './ablyService';
 
 type Event = IdlEvents<ArxPredict>; // Commented out as it's not being used
 
@@ -75,6 +76,18 @@ async function handleRevealProbsEvent(timestamp: string, data: Event['revealProb
       await PriceService.addMarketPrices(marketId.toString(), timestamp, probs);
     } catch (priceError) {
       console.warn(`⚠️ Failed to store prices in cache for market ${marketId}:`, priceError);
+    }
+    
+    // Broadcast reveal probabilities via Ably
+    try {
+      await broadcastRevealProbs(
+        marketId.toString(),
+        probs,
+        votes.map(v => convertBNToNumber(v)),
+        timestamp
+      );
+    } catch (ablyError) {
+      console.warn(`⚠️ Failed to broadcast reveal probs via Ably for market ${marketId}:`, ablyError);
     }
     
     console.log(`✅ Updated market ${marketId} with reveal probabilities`);
