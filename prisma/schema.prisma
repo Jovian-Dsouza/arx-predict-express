@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,53 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  username  String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Market {
+  id                                    String   @id
+  authority                             String
+  question                              String
+  options                               String[]
+  probs                                 Float[]
+  votes                                 Int[]
+  liquidityParameter                    Float
+  mint                                  String
+  tvl                                   Float
+  status                                String
+  marketUpdatedAt                       BigInt
+  winningOption                         Int?
+  numBuyEvents                          Int     @default(0)
+  numSellEvents                         Int     @default(0)
+  lastSellSharesEventTimestamp          DateTime?
+  lastBuySharesEventTimestamp           DateTime?
+  lastClaimRewardsEventTimestamp        DateTime?
+  lastRevealProbsEventTimestamp         DateTime?
+  lastClaimMarketFundsEventTimestamp    DateTime?
+  lastMarketSettledEventTimestamp       DateTime?
+  createdAt                             DateTime @default(now())
+  updatedAt                             DateTime @updatedAt
 
-  // Relations
-  chatMessages ChatMessage[]
-  predictions  Prediction[]
-
-  @@map("users")
-}
-
-model ChatMessage {
-  id        String   @id @default(cuid())
-  content   String
-  userId    String
-  channel   String
-  timestamp DateTime @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("chat_messages")
-}
-
-model Prediction {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("predictions")
-}
-
-model HeliusWebhook {
-  id        String   @id @default(cuid())
-  eventType String
-  payload   Json
-  processed Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  @@map("helius_webhooks")
+  @@map("markets")
 }
