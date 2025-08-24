@@ -1,8 +1,11 @@
 import { Job } from 'bull';
-import { IdlEvents } from "@coral-xyz/anchor";
-import { ArxPredict } from "../contract/arx_predict";
 import { getMarketData } from './solanaEventMonitor';
-type Event = IdlEvents<ArxPredict>;
+import { prisma } from '../config/database';
+import { IdlEvents } from "@coral-xyz/anchor";
+import { ArxPredict } from '../contract/arx_predict';
+
+type Event = IdlEvents<ArxPredict>; // Commented out as it's not being used
+
 
 interface SolanaEventJob {
   eventName: string;
@@ -44,70 +47,139 @@ export const processSolanaEvent = async (job: Job<SolanaEventJob>): Promise<void
 };
 
 async function handleRevealProbsEvent(timestamp: string, data: Event['revealProbsEvent']): Promise<void> {
-  // Handle reveal probabilities event logic
   console.log('Processing reveal probabilities event:', data);
   const { marketId, probs, votes } = data;
-  //update db table 
-
-  //Store in db
+  
+  try {
+    await prisma.market.update({
+      where: { id: marketId.toString() },
+      data: {
+        probs: probs,
+        votes: votes.map(v => v.toNumber()),
+        lastRevealProbsEventTimestamp: new Date(timestamp)
+      }
+    });
+    console.log(`✅ Updated market ${marketId} with reveal probabilities`);
+  } catch (error) {
+    console.error(`❌ Failed to update market ${marketId} with reveal probabilities:`, error);
+    throw error;
+  }
 }
 
 async function handleBuySharesEvent(timestamp: string, data: Event['buySharesEvent']): Promise<void> {
-  // Handle buy shares event logic
   console.log('Processing buy shares event:', data);
-  const { marketId, status, amount, tvl } = data;
+  const { marketId, status, tvl } = data;
   if (status === 0) {
     return;
   }
 
-  //update db table 
+  try {
+    await prisma.market.update({
+      where: { id: marketId.toString() },
+      data: {
+        tvl: tvl.toNumber(),
+        numBuyEvents: { increment: 1 },
+        lastBuySharesEventTimestamp: new Date(timestamp)
+      }
+    });
+    console.log(`✅ Updated market ${marketId} with buy shares event`);
+  } catch (error) {
+    console.error(`❌ Failed to update market ${marketId} with buy shares event:`, error);
+    throw error;
+  }
 }
 
 async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesEvent']): Promise<void> {
-  // Handle sell shares event logic
   console.log('Processing sell shares event:', data);
-  const { marketId, status, amount, tvl } = data;
+  const { marketId, status, tvl } = data;
   if (status === 0) {
     return;
   }
 
-  //update db table 
+  try {
+    await prisma.market.update({
+      where: { id: marketId.toString() },
+      data: {
+        tvl: tvl.toNumber(),
+        numSellEvents: { increment: 1 },
+        lastSellSharesEventTimestamp: new Date(timestamp)
+      }
+    });
+    console.log(`✅ Updated market ${marketId} with sell shares event`);
+  } catch (error) {
+    console.error(`❌ Failed to update market ${marketId} with sell shares event:`, error);
+    throw error;
+  }
 }
 
 
 async function handleInitMarketStatsEvent(timestamp: string, data: Event['initMarketStatsEvent']): Promise<void> {
-  console.log('Processing init market stats event:', data);
   const { marketId } = data;
   const marketData = await getMarketData(marketId);
-  const dbData = {
-    id: marketData.id,
-    authority: marketData.authority.toString(),
-    question: marketData.question,
-    options: marketData.options,
-    probs: marketData.probsRevealed, 
-    votes: marketData.votesRevealed.map(x => x.toNumber()),
-    liquidityParameter: marketData.liquidityParameter,
-    mint: marketData.mint.toString(),
-    tvl: marketData.tvl.toNumber(),
-    status: marketData.status.toString(), //Inactive, Active, Settled
-    updatedAt: marketData.updatedAt.toNumber(),
-    winningOption: marketData.winningOutcome,
-    numBuyEvents: 0,
-    numSellEvents:0,
-    lastSellSharesEventTimestamp: null,
-    lastBuySharesEventTimestamp: null,
-    lastClaimRewardsEventTimestamp: null,
-    lastRevealProbsEventTimestamp: null,
-    lastClaimMarketFundsEventTimestamp: null,
-    lastMarketSettledEventTimestamp: null,
+  try {
+    await prisma.market.upsert({
+      where: { id: marketData.id.toString() },
+      update: {
+        authority: marketData.authority.toString(),
+        question: marketData.question,
+        options: marketData.options,
+        probs: marketData.probsRevealed, 
+        votes: marketData.votesRevealed.map(x => x.toNumber()),
+        liquidityParameter: marketData.liquidityParameter,
+        mint: marketData.mint.toString(),
+        tvl: marketData.tvl.toNumber(),
+        status: marketData.status.toString(), //Inactive, Active, Settled
+        marketUpdatedAt: marketData.updatedAt.toNumber(),
+        winningOption: marketData.winningOutcome,
+      },
+      create: {
+        id: marketData.id.toString(),
+        authority: marketData.authority.toString(),
+        question: marketData.question,
+        options: marketData.options,
+        probs: marketData.probsRevealed, 
+        votes: marketData.votesRevealed.map(x => x.toNumber()),
+        liquidityParameter: marketData.liquidityParameter,
+        mint: marketData.mint.toString(),
+        tvl: marketData.tvl.toNumber(),
+        status: marketData.status.toString(), //Inactive, Active, Settled
+        marketUpdatedAt: marketData.updatedAt.toNumber(),
+        winningOption: marketData.winningOutcome,
+        numBuyEvents: 0,
+        numSellEvents: 0,
+        lastSellSharesEventTimestamp: null,
+        lastBuySharesEventTimestamp: null,
+        lastClaimRewardsEventTimestamp: null,
+        lastRevealProbsEventTimestamp: null,
+        lastClaimMarketFundsEventTimestamp: null,
+        lastMarketSettledEventTimestamp: null,
+      }
+    });
+    console.log(`✅ Upserted market ${marketData.id} successfully`);
+  } catch (error) {
+    console.error(`❌ Failed to upsert market ${marketData.id}:`, error);
+    throw error;
   }
-  console.log(`Market data=> ${JSON.stringify(dbData)}`);
-  //Store in db
 }
 
 async function handleMarketSettledEvent(timestamp: string, data: Event['marketSettledEvent']): Promise<void> {
-  // Handle market settled event logic
   console.log('Processing market settled event:', data);
   const { marketId, winningOutcome, probs, votes } = data;
-  //update db table 
+  
+  try {
+    await prisma.market.update({
+      where: { id: marketId.toString() },
+      data: {
+        winningOption: winningOutcome,
+        probs: probs,
+        votes: votes.map(v => v.toNumber()),
+        status: 'Settled',
+        lastMarketSettledEventTimestamp: new Date(timestamp)
+      }
+    });
+    console.log(`✅ Updated market ${marketId} as settled`);
+  } catch (error) {
+    console.error(`❌ Failed to update market ${marketId} as settled:`, error);
+    throw error;
+  }
 }
