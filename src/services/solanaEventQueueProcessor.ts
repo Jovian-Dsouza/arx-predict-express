@@ -1,4 +1,7 @@
 import { Job } from 'bull';
+import { IdlEvents } from "@coral-xyz/anchor";
+import { ArxPredict } from "../contract/arx_predict";
+type Event = IdlEvents<ArxPredict>;
 
 interface SolanaEventJob {
   eventName: string;
@@ -11,10 +14,6 @@ export const processSolanaEvent = async (job: Job<SolanaEventJob>): Promise<void
   
   try {
     console.log(`[${timestamp}] 📡 Processing ${eventName} event:`, JSON.stringify(data, null, 2));
-    
-    // Process the event data here
-    // This is where you would add your business logic for handling different event types
-    
     switch (eventName) {
       case 'voteEvent':
         await handleVoteEvent(data);
@@ -56,47 +55,47 @@ export const processSolanaEvent = async (job: Job<SolanaEventJob>): Promise<void
 };
 
 // Event handler functions - implement your business logic here
-async function handleVoteEvent(data: any): Promise<void> {
+async function handleVoteEvent(data: Event['voteEvent']): Promise<void> {
   // Handle vote event logic
   console.log('Processing vote event:', data);
 }
 
-async function handleRevealResultEvent(data: any): Promise<void> {
+async function handleRevealResultEvent(data: Event['revealResultEvent']): Promise<void> {
   // Handle reveal result event logic
   console.log('Processing reveal result event:', data);
 }
 
-async function handleRevealProbsEvent(data: any): Promise<void> {
+async function handleRevealProbsEvent(data: Event['revealProbsEvent']): Promise<void> {
   // Handle reveal probabilities event logic
   console.log('Processing reveal probabilities event:', data);
 }
 
-async function handleBuySharesEvent(data: any): Promise<void> {
+async function handleBuySharesEvent(data: Event['buySharesEvent']): Promise<void> {
   // Handle buy shares event logic
   console.log('Processing buy shares event:', data);
 }
 
-async function handleSellSharesEvent(data: any): Promise<void> {
+async function handleSellSharesEvent(data: Event['sellSharesEvent']): Promise<void> {
   // Handle sell shares event logic
   console.log('Processing sell shares event:', data);
 }
 
-async function handleClaimRewardsEvent(data: any): Promise<void> {
+async function handleClaimRewardsEvent(data: Event['claimRewardsEvent']): Promise<void> {
   // Handle claim rewards event logic
   console.log('Processing claim rewards event:', data);
 }
 
-async function handleInitMarketStatsEvent(data: any): Promise<void> {
+async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']): Promise<void> {
   // Handle init market stats event logic
   console.log('Processing init market stats event:', data);
 }
 
-async function handleClaimMarketFundsEvent(data: any): Promise<void> {
+async function handleClaimMarketFundsEvent(data: Event['claimMarketFundsEvent']): Promise<void> {
   // Handle claim market funds event logic
   console.log('Processing claim market funds event:', data);
 }
 
-async function handleMarketSettledEvent(data: any): Promise<void> {
+async function handleMarketSettledEvent(data: Event['marketSettledEvent']): Promise<void> {
   // Handle market settled event logic
   console.log('Processing market settled event:', data);
 }
