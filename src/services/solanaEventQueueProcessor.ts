@@ -51,6 +51,10 @@ function convertBNToNumber(bnString: string): number {
   return new BN(cleanHex, 16).toNumber();
 }
 
+function solanaEnumToString(enumObj: any): string {
+  return Object.keys(enumObj)[0] || '';
+}
+
 async function handleRevealProbsEvent(timestamp: string, data: Event['revealProbsEvent']): Promise<void> {
   console.log('Processing reveal probabilities event:', data);
   const { marketId, probs, votes } = data;
@@ -121,12 +125,12 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
 
 async function checkOrCreateMarket(marketId: number): Promise<void> {
 
-  const marketData = await prisma.market.findUnique({
-    where: { id: marketId.toString() },
-  });
-  if (marketData) {
-    return;
-  }
+  // const marketData = await prisma.market.findUnique({
+  //   where: { id: marketId.toString() },
+  // });
+  // if (marketData) {
+  //   return;
+  // }
 
   await handleInitMarketStatsEvent({ marketId: marketId });
 }
@@ -147,7 +151,7 @@ async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']): 
         liquidityParameter: convertBNToNumber(marketData.liquidityParameter.toString()),
         mint: marketData.mint.toString(),
         tvl: convertBNToNumber(marketData.tvl.toString()),
-        status: marketData.status.toString(), //Inactive, Active, Settled
+        status: solanaEnumToString(marketData.status), //Inactive, Active, Settled
         marketUpdatedAt: convertBNToNumber(marketData.updatedAt.toString()),
         winningOption: marketData.winningOutcome,
       },
@@ -161,7 +165,7 @@ async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']): 
         liquidityParameter: convertBNToNumber(marketData.liquidityParameter.toString()),
         mint: marketData.mint.toString(),
         tvl: convertBNToNumber(marketData.tvl.toString()),
-        status: marketData.status.toString(), //Inactive, Active, Settled
+        status: solanaEnumToString(marketData.status), //Inactive, Active, Settled
         marketUpdatedAt: convertBNToNumber(marketData.updatedAt.toString()),
         winningOption: marketData.winningOutcome,
         numBuyEvents: 0,
@@ -194,7 +198,7 @@ async function handleMarketSettledEvent(timestamp: string, data: Event['marketSe
         winningOption: winningOutcome,
         probs: probs,
         votes: votes.map(v => convertBNToNumber(v.toString())),
-        status: 'Settled',
+        status: 'settled', //TODO use enum
         lastMarketSettledEventTimestamp: new Date(timestamp)
       }
     });
