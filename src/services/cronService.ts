@@ -1,5 +1,6 @@
 import * as cron from 'node-cron';
 import { requestAirdrop } from '../utils/solana';
+import { updateProbsForAllActiveMarkets } from '../utils/cronHelper';
 
 interface CronJob {
   id: string;
@@ -19,12 +20,14 @@ class CronService {
     // Example: Run every 5 seconds
     // this.addJob('heartbeat-5s', '*/5 * * * * *', () => {
     //   console.log('Running heartbeat task every 5 seconds');
+    //   findAllActiveMarkets();
     // }, 'Heartbeat check every 5 seconds');
 
-    // Example: Run every 5 minutes
-    // this.addJob('cleanup', '*/5 * * * *', () => {
-    //   console.log('Running cleanup task every 5 minutes');
-    // }, 'Cleanup task every 5 minutes');
+    // Example: Run every 2 minutes
+    this.addJob('cleanup', '*/2 * * * *', () => {
+      console.log('Running cleanup task every 2 minutes');
+      updateProbsForAllActiveMarkets();
+    }, 'Updating probs for all active markets');
 
     // Example: Run daily at midnight
     this.addJob('daily', '0 0 * * *', () => {

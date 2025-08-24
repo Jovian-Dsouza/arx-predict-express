@@ -19,7 +19,6 @@ import { initRedis, closeConnections, checkDatabaseHealth } from './config/datab
 // Import Solana event monitor and queue
 import { SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
 import { processSolanaEvent } from './services/solanaEventQueueProcessor';
-import { revealProbs } from './utils/solana';
 
 // Import cron service
 import cronService from './services/cronService';
@@ -205,8 +204,6 @@ const startServer = async () => {
       console.log(`📋 Solana event queue: Active`);
       console.log(`⏰ Cron service: Active`);
     });
-
-    await revealProbs(1);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
