@@ -1,5 +1,5 @@
 # Multi-stage build for production optimization
-FROM node:18-alpine AS base
+FROM node:24.5.0-alpine AS base
 
 # Install dependencies for node-gyp and other native modules
 RUN apk add --no-cache python3 make g++ curl
@@ -13,23 +13,23 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci --only=production && npm cache clean --force
 
-# Development stage
-FROM base AS development
+# # Development stage
+# FROM base AS development
 
-# Install development dependencies
-RUN npm ci
+# # Install development dependencies
+# RUN npm ci
 
-# Copy source code
-COPY . .
+# # Copy source code
+# COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+# # Generate Prisma client
+# RUN npx prisma generate
 
-# Expose port
-EXPOSE 3000
+# # Expose port
+# EXPOSE 3000
 
-# Start development server
-CMD ["npm", "run", "dev"]
+# Start development server with migrations
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]
 
 # Production stage
 FROM base AS production
@@ -47,7 +47,7 @@ RUN npm run build
 RUN rm -rf src/ prisma/ docker/ .env.example README.md
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3001
 
-# Start production server
-CMD ["npm", "start"]
+# Start production server with migrations
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
