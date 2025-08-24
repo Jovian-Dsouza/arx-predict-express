@@ -12,11 +12,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     ports:
-      - "127.0.0.1:5432:5432"  # Bind to localhost only
+      - "5432:5432"
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
-    networks:
-      - arx-network-prod
+    # networks:
+    #   - arx-network-prod
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arx_user} -d ${POSTGRES_DB:-arx_predict_db}"]
       interval: 30s
@@ -35,13 +35,13 @@ services:
     container_name: arx-predict-redis-prod
     restart: unless-stopped
     ports:
-      - "127.0.0.1:6379:6379"  # Bind to localhost only
+      - "6379:6379"  # Bind to localhost only
     volumes:
       - redis_data_prod:/data
       - ./docker/redis/redis.prod.conf:/usr/local/etc/redis/redis.conf
     command: redis-server /usr/local/etc/redis/redis.conf
-    networks:
-      - arx-network-prod
+    # networks:
+    #   - arx-network-prod
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -63,27 +63,31 @@ services:
     container_name: arx-predict-app-prod
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3000:3000"  # Bind to localhost only
+      - "3001:3001" 
     environment:
       NODE_ENV: production
-      PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-arx_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-arx_predict_db}
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-arx_user}:${POSTGRES_PASSWORD:-arx_password}@postgres:5432/${POSTGRES_DB:-arx_predict_db}
       REDIS_URL: redis://redis:6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      FRONTEND_URL: ${FRONTEND_URL}
       ABLY_API_KEY: ${ABLY_API_KEY}
       ABLY_APP_ID: ${ABLY_APP_ID}
       HELIUS_API_KEY: ${HELIUS_API_KEY}
       HELIUS_WEBHOOK_SECRET: ${HELIUS_WEBHOOK_SECRET}
       RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
       RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+      SOLANA_RPC_URL: ${SOLANA_RPC_URL}
+      SOLANA_PROGRAM_ID: ${SOLANA_PROGRAM_ID}
+      WALLET_PRIVATE_KEY: ${WALLET_PRIVATE_KEY}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - arx-network-prod
+    # networks:
+    #   - arx-network-prod
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 60s
@@ -99,27 +103,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Nginx Reverse Proxy (Optional)
-  nginx:
-    image: nginx:alpine
-    container_name: arx-predict-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
-    networks:
-      - arx-network-prod
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
 
 volumes:
   postgres_data_prod:
@@ -127,9 +110,9 @@ volumes:
   redis_data_prod:
     driver: local
 
-networks:
-  arx-network-prod:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.21.0.0/16
+# networks:
+#   arx-network-prod:
+#     driver: bridge
+#     ipam:
+#       config:
+#         - subnet: 172.21.0.0/16
