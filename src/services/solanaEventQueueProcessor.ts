@@ -46,11 +46,6 @@ export const processSolanaEvent = async (job: Job<SolanaEventJob>): Promise<void
   }
 };
 
-function convertBNToNumber(bnString: string): number {
-  const cleanHex = bnString.startsWith('0x') ? bnString.slice(2) : bnString;
-  return new BN(cleanHex, 16).toNumber();
-}
-
 function solanaEnumToString(enumObj: any): string {
   return Object.keys(enumObj)[0] || '';
 }
@@ -64,7 +59,7 @@ async function handleRevealProbsEvent(timestamp: string, data: Event['revealProb
       where: { id: marketId.toString() },
       data: {
         probs: probs,
-        votes: votes.map(v => convertBNToNumber(v.toString())),
+        votes: votes.map(v => v.toNumber()),
         lastRevealProbsEventTimestamp: new Date(timestamp)
       }
     });
@@ -87,7 +82,7 @@ async function handleBuySharesEvent(timestamp: string, data: Event['buySharesEve
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
-        tvl: convertBNToNumber(tvl.toString()),
+        tvl: tvl.toNumber(),
         numBuyEvents: { increment: 1 },
         lastBuySharesEventTimestamp: new Date(timestamp)
       }
@@ -111,7 +106,7 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
-        tvl: convertBNToNumber(tvl.toString()),
+        tvl: tvl.toNumber(),
         numSellEvents: { increment: 1 },
         lastSellSharesEventTimestamp: new Date(timestamp)
       }
@@ -124,12 +119,12 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
 }
 
 export async function checkOrCreateMarket(marketId: number) {
-  const marketData = await prisma.market.findUnique({
-    where: { id: marketId.toString() },
-  });
-  if (marketData) {
-    return marketData;
-  }
+  // const marketData = await prisma.market.findUnique({
+  //   where: { id: marketId.toString() },
+  // });
+  // if (marketData) {
+  //   return marketData;
+  // }
 
   return await handleInitMarketStatsEvent({ marketId: marketId });
 }
@@ -146,12 +141,12 @@ async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']) {
         question: marketData.question,
         options: marketData.options,
         probs: marketData.probsRevealed, 
-        votes: marketData.votesRevealed.map(x => convertBNToNumber(x.toString())),
-        liquidityParameter: convertBNToNumber(marketData.liquidityParameter.toString()),
+        votes: marketData.votesRevealed.map(x => x.toNumber()),
+        liquidityParameter: marketData.liquidityParameter.toNumber(),
         mint: marketData.mint.toString(),
-        tvl: convertBNToNumber(marketData.tvl.toString()),
+        tvl: marketData.tvl.toNumber(),
         status: solanaEnumToString(marketData.status), //Inactive, Active, Settled
-        marketUpdatedAt: convertBNToNumber(marketData.updatedAt.toString()),
+        marketUpdatedAt: marketData.updatedAt.toNumber(),
         winningOption: marketData.winningOutcome,
       },
       create: {
@@ -160,12 +155,12 @@ async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']) {
         question: marketData.question,
         options: marketData.options,
         probs: marketData.probsRevealed, 
-        votes: marketData.votesRevealed.map(x => convertBNToNumber(x.toString())),
-        liquidityParameter: convertBNToNumber(marketData.liquidityParameter.toString()),
+        votes: marketData.votesRevealed.map(x => x.toNumber()),
+        liquidityParameter: marketData.liquidityParameter.toNumber(),
         mint: marketData.mint.toString(),
-        tvl: convertBNToNumber(marketData.tvl.toString()),
+        tvl: marketData.tvl.toNumber(),
         status: solanaEnumToString(marketData.status), //Inactive, Active, Settled
-        marketUpdatedAt: convertBNToNumber(marketData.updatedAt.toString()),
+        marketUpdatedAt: marketData.updatedAt.toNumber(),
         winningOption: marketData.winningOutcome,
         numBuyEvents: 0,
         numSellEvents: 0,
@@ -196,7 +191,7 @@ async function handleMarketSettledEvent(timestamp: string, data: Event['marketSe
       data: {
         winningOption: winningOutcome,
         probs: probs,
-        votes: votes.map(v => convertBNToNumber(v.toString())),
+        votes: votes.map(v => v.toNumber()),
         status: 'settled', //TODO use enum
         lastMarketSettledEventTimestamp: new Date(timestamp)
       }
