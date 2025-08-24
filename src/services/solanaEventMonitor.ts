@@ -3,6 +3,20 @@ import { ArxPredict } from "../contract/arx_predict";
 // @ts-ignore
 import * as IDL from "../contract/arx_predict.json";
 import { Connection, Keypair } from "@solana/web3.js";
+type Event = IdlEvents<ArxPredict>;
+
+const eventNames: (keyof Event)[] = [
+    "voteEvent",
+    "revealResultEvent",
+    "revealProbsEvent",
+    "buySharesEvent",
+    "sellSharesEvent",
+    "claimRewardsEvent",
+    "initMarketStatsEvent",
+    "claimMarketFundsEvent",
+    "marketSettledEvent",
+];
+
 
 export class SolanaEventMonitor {
   private isRunning: boolean = false;
@@ -49,18 +63,6 @@ export class SolanaEventMonitor {
     this.isRunning = true;
 
     try {
-      type Event = IdlEvents<ArxPredict>;
-
-      const eventNames: (keyof Event)[] = [
-        "voteEvent",
-        "revealResultEvent",
-        "revealProbsEvent",
-        "buySharesEvent",
-        "sellSharesEvent",
-        "claimRewardsEvent",
-        "initMarketStatsEvent",
-      ];
-
       eventNames.forEach((eventName) => {
         this.listeners.set(eventName, this.program?.addEventListener(
           eventName,
@@ -71,7 +73,6 @@ export class SolanaEventMonitor {
             console.log("─".repeat(50));
           }
         ));
-
         console.log(`✅ Listening for ${eventName} events`);
       });
     } catch (error) {
