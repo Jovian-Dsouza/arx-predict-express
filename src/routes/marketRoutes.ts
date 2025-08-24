@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
+import { checkOrCreateMarket } from '../services/solanaEventQueueProcessor';
 
 const router = Router();
 
@@ -123,6 +124,65 @@ router.get('/:id', async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to fetch market',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Check or create market by ID
+router.post('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Market ID is required'
+      });
+    }
+
+    // Convert string ID to number for checkOrCreateMarket function
+    const marketId = parseInt(id);
+    
+    if (isNaN(marketId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid market ID. Must be a valid number'
+      });
+    }
+
+    console.log(`🔍 Checking or creating market with ID: ${marketId}`);
+    
+    // Call the checkOrCreateMarket function
+    const market = await checkOrCreateMarket(marketId);
+
+    if (!market) {
+      return res.status(404).json({
+        success: false,
+        message: 'Failed to check or create market'
+      });
+    }
+
+    // Convert BigInt fields to strings for JSON serialization
+    const serializedMarket = {
+      ...market,
+      votes: market.votes.map(vote => vote.toString()),
+      liquidityParameter: market.liquidityParameter.toString(),
+      tvl: market.tvl.toString(),
+      marketUpdatedAt: market.marketUpdatedAt.toString()
+    };
+
+    return res.json({
+      success: true,
+      message: 'Market checked/created successfully',
+      data: serializedMarket
+    });
+
+  } catch (error) {
+    console.error('Error checking or creating market:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to check or create market',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }

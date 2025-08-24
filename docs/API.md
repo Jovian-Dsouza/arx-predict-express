@@ -16,6 +16,16 @@ Currently, no authentication is required for these endpoints.
 
 ## Market APIs
 
+**Available Endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/markets` | Get market list with sorting & pagination |
+| `GET` | `/api/markets/:id` | Get specific market by ID |
+| `POST` | `/api/markets/:id` | Check if market exists, create if not |
+
+---
+
 ### 1. Get Market List
 
 Retrieves a paginated list of markets with sorting and filtering capabilities.
@@ -186,6 +196,82 @@ curl -s "http://localhost:3001/api/markets/abc123" | jq .
 
 # Test with invalid ID
 curl -s "http://localhost:3001/api/markets/invalid-id" | jq .
+```
+
+---
+
+### 3. Check or Create Market
+
+Checks if a market exists and creates it if it doesn't. This endpoint is useful for ensuring market data is available before processing events.
+
+**Endpoint:** `POST /api/markets/:id`
+
+**Path Parameters:**
+
+| Parameter | Type   | Required | Description           |
+|-----------|--------|----------|-----------------------|
+| `id`      | string | Yes      | Unique market ID (must be a number) |
+
+**Response Format:**
+
+```json
+{
+  "success": true,
+  "message": "Market checked/created successfully",
+  "data": {
+    "id": "string",
+    "authority": "string",
+    "question": "string",
+    "options": ["string"],
+    "probs": [number],
+    "votes": ["string"], // BigInt converted to strings
+    "liquidityParameter": "string", // BigInt converted to string
+    "mint": "string",
+    "tvl": "string", // BigInt converted to string
+    "status": "string",
+    "marketUpdatedAt": "string", // BigInt converted to string
+    "winningOption": number | null,
+    "numBuyEvents": number,
+    "numSellEvents": number,
+    "lastSellSharesEventTimestamp": "string" | null,
+    "lastBuySharesEventTimestamp": "string" | null,
+    "lastClaimRewardsEventTimestamp": "string" | null,
+    "lastRevealProbsEventTimestamp": "string" | null,
+    "lastClaimMarketFundsEventTimestamp": "string" | null,
+    "lastMarketSettledEventTimestamp": "string" | null,
+    "createdAt": "string",
+    "updatedAt": "string"
+  }
+}
+```
+
+**Error Response:**
+
+```json
+{
+  "success": false,
+  "message": "Invalid market ID. Must be a valid number"
+}
+```
+
+**HTTP Status Codes:**
+
+- `200` - Success (market checked/created)
+- `400` - Bad Request (invalid or missing ID)
+- `404` - Failed to check or create market
+- `500` - Internal Server Error
+
+**Example Requests:**
+
+```bash
+# Check or create market with ID "1"
+curl -X POST "http://localhost:3001/api/markets/1/check-or-create" | jq .
+
+# Check or create market with ID "123"
+curl -X POST "http://localhost:3001/api/markets/123/check-or-create" | jq .
+
+# Test with invalid ID (will return 400)
+curl -X POST "http://localhost:3001/api/markets/invalid-id/check-or-create" | jq .
 ```
 
 ---
