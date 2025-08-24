@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 // Import routes
 import healthRoutes from './routes/healthRoutes';
 import heliusRoutes from './routes/heliusRoutes';
+import marketRoutes from './routes/marketRoutes';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler';
@@ -75,6 +76,7 @@ app.use('/health', healthRoutes);
 
 // API routes
 app.use('/api/helius', heliusRoutes);
+app.use('/api/markets', marketRoutes);
 
 // Root route
 app.get('/', (_req, res) => {
@@ -88,6 +90,7 @@ app.get('/', (_req, res) => {
       chat: '/api/chat',
       helius: '/api/helius',
       webhook: '/api/helius/webhook',
+      markets: '/api/markets',
     },
   });
 });
