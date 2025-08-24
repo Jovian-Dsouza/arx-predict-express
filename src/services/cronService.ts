@@ -1,4 +1,5 @@
 import * as cron from 'node-cron';
+import { requestAirdrop } from '../utils/solana';
 
 interface CronJob {
   id: string;
@@ -16,9 +17,9 @@ class CronService {
 
   private setupDefaultJobs() {
     // Example: Run every 5 seconds
-    this.addJob('heartbeat-5s', '*/5 * * * * *', () => {
-      console.log('Running heartbeat task every 5 seconds');
-    }, 'Heartbeat check every 5 seconds');
+    // this.addJob('heartbeat-5s', '*/5 * * * * *', () => {
+    //   console.log('Running heartbeat task every 5 seconds');
+    // }, 'Heartbeat check every 5 seconds');
 
     // Example: Run every 5 minutes
     // this.addJob('cleanup', '*/5 * * * *', () => {
@@ -28,6 +29,7 @@ class CronService {
     // Example: Run daily at midnight
     this.addJob('daily', '0 0 * * *', () => {
       console.log('Running daily task at midnight');
+      requestAirdrop();
     }, 'Daily task at midnight');
   }
 
