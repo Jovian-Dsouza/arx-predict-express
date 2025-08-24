@@ -1,7 +1,7 @@
 import { Job } from 'bull';
 import { getMarketData } from '../utils/solana';
 import { prisma } from '../config/database';
-import { IdlEvents } from "@coral-xyz/anchor";
+import { BN, IdlEvents } from "@coral-xyz/anchor";
 import { ArxPredict } from '../contract/arx_predict';
 import { invalidateMarketCache } from '../routes/marketRoutes';
 
@@ -51,6 +51,10 @@ function solanaEnumToString(enumObj: any): string {
   return Object.keys(enumObj)[0] || '';
 }
 
+function convertBNToNumber(bn: BN): number {
+  return new BN(bn.toString(), 16).toNumber();
+}
+
 async function handleRevealProbsEvent(timestamp: string, data: Event['revealProbsEvent']): Promise<void> {
   console.log('Processing reveal probabilities event:', data);
   const { marketId, probs, votes } = data;
@@ -60,7 +64,7 @@ async function handleRevealProbsEvent(timestamp: string, data: Event['revealProb
       where: { id: marketId.toString() },
       data: {
         probs: probs,
-        votes: votes.map(v => v.toNumber()),
+        votes: votes.map(v => convertBNToNumber(v)),
         lastRevealProbsEventTimestamp: new Date(timestamp)
       }
     });
@@ -84,7 +88,7 @@ async function handleBuySharesEvent(timestamp: string, data: Event['buySharesEve
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
-        tvl: tvl.toNumber(),
+        tvl: convertBNToNumber(tvl),
         numBuyEvents: { increment: 1 },
         lastBuySharesEventTimestamp: new Date(timestamp)
       }
@@ -109,7 +113,7 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
-        tvl: tvl.toNumber(),
+        tvl: convertBNToNumber(tvl),
         numSellEvents: { increment: 1 },
         lastSellSharesEventTimestamp: new Date(timestamp)
       }
@@ -197,7 +201,7 @@ async function handleMarketSettledEvent(timestamp: string, data: Event['marketSe
       data: {
         winningOption: winningOutcome,
         probs: probs,
-        votes: votes.map(v => v.toNumber()),
+        votes: votes.map(v => convertBNToNumber(v)),
         status: 'settled', //TODO use enum
         lastMarketSettledEventTimestamp: new Date(timestamp)
       }
