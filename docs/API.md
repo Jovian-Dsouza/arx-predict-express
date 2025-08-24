@@ -22,6 +22,7 @@ Currently, no authentication is required for these endpoints.
 |--------|----------|-------------|
 | `GET` | `/api/markets` | Get market list with sorting & pagination |
 | `GET` | `/api/markets/:id` | Get specific market by ID (checks DB first, then blockchain) |
+| `DELETE` | `/api/markets/cache` | Manage cache (invalidate specific market or all cache) |
 
 ---
 
@@ -222,6 +223,40 @@ curl -s "http://localhost:3001/api/markets/invalid-id" | jq .
 ```
 
 
+---
+
+### 3. Cache Management
+
+Manage Redis cache for market data to improve performance and control data freshness.
+
+**Endpoint:** `DELETE /api/markets/cache`
+
+**Query Parameters:**
+
+| Parameter | Type   | Required | Description           |
+|-----------|--------|----------|-----------------------|
+| `marketId` | string | No       | Specific market ID to invalidate cache for |
+
+**Response Format:**
+
+```json
+{
+  "success": true,
+  "message": "Cache invalidated for market 1"
+}
+```
+
+**Example Requests:**
+
+```bash
+# Invalidate cache for specific market
+curl -X DELETE "http://localhost:3001/api/markets/cache?marketId=1" | jq .
+
+# Invalidate all market cache
+curl -X DELETE "http://localhost:3001/api/markets/cache" | jq .
+```
+
+---
 
 ## Data Types
 
@@ -375,3 +410,6 @@ CORS is enabled for development and production environments:
 - **Filtering**: Multiple filters can be combined and work with sorting and pagination
 - **Question Search**: Question filtering is case-insensitive and uses partial matching
 - **Filter Persistence**: Applied filters are included in the response for transparency
+- **Caching**: Redis caching is implemented for improved performance (5-minute TTL)
+- **Cache Invalidation**: Cache can be manually invalidated for specific markets or all data
+- **Smart Caching**: Only database results are cached; blockchain results are not cached
