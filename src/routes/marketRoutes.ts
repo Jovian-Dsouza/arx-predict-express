@@ -7,7 +7,16 @@ const router = Router();
 // Get market list - returns markets in sorted order
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { sortBy = 'createdAt', order = 'desc', limit = '50', offset = '0' } = req.query;
+    const { 
+      sortBy = 'createdAt', 
+      order = 'desc', 
+      limit = '50', 
+      offset = '0',
+      status,
+      authority,
+      question,
+      mint
+    } = req.query;
     
     // Validate sortBy parameter
     const allowedSortFields = [
@@ -39,7 +48,30 @@ router.get('/', async (req: Request, res: Response) => {
     const orderBy: any = {};
     orderBy[sortBy as string] = order as string;
 
+    // Build where clause for filtering
+    const where: any = {};
+    
+    if (status) {
+      where.status = status;
+    }
+    
+    if (authority) {
+      where.authority = authority;
+    }
+    
+    if (question) {
+      where.question = {
+        contains: question as string,
+        mode: 'insensitive' // Case-insensitive search
+      };
+    }
+    
+    if (mint) {
+      where.mint = mint;
+    }
+
     const markets = await prisma.market.findMany({
+      where,
       orderBy,
       take: limitNum,
       skip: offsetNum
@@ -54,8 +86,8 @@ router.get('/', async (req: Request, res: Response) => {
       marketUpdatedAt: market.marketUpdatedAt.toString()
     }));
 
-    // Get total count for pagination
-    const totalCount = await prisma.market.count();
+    // Get total count for pagination (with same filters)
+    const totalCount = await prisma.market.count({ where });
 
     return res.json({
       success: true,
@@ -69,6 +101,12 @@ router.get('/', async (req: Request, res: Response) => {
       sort: {
         field: sortBy,
         order: order
+      },
+      filters: {
+        status: status || null,
+        authority: authority || null,
+        question: question || null,
+        mint: mint || null
       }
     });
 

@@ -40,6 +40,10 @@ Retrieves a paginated list of markets with sorting and filtering capabilities.
 | `order`   | string  | `desc`   | Sort order                                    | `asc`, `desc`                                   |
 | `limit`   | number  | `50`     | Number of markets to return (max 100)         | 1-100                                           |
 | `offset`  | number  | `0`      | Number of markets to skip for pagination      | 0+                                              |
+| `status`  | string  | -        | Filter by market status                        | `active`, `inactive`, `settled`                 |
+| `authority` | string | -        | Filter by market authority address             | Any valid Solana address                        |
+| `question` | string | -        | Filter by question text (case-insensitive)    | Any text string                                 |
+| `mint`    | string  | -        | Filter by token mint address                  | Any valid Solana address                        |
 
 **Response Format:**
 
@@ -81,6 +85,12 @@ Retrieves a paginated list of markets with sorting and filtering capabilities.
   "sort": {
     "field": "string",
     "order": "string"
+  },
+  "filters": {
+    "status": "string" | null,
+    "authority": "string" | null,
+    "question": "string" | null,
+    "mint": "string" | null
   }
 }
 ```
@@ -121,7 +131,21 @@ curl -s "http://localhost:3001/api/markets?sortBy=question&order=asc" | jq .
 
 # Get markets sorted by market update timestamp (newest first)
 curl -s "http://localhost:3001/api/markets?sortBy=marketUpdatedAt&order=desc" | jq .
-```
+
+# Filter by status
+curl -s "http://localhost:3001/api/markets?status=active" | jq .
+
+# Filter by question text (case-insensitive)
+curl -s "http://localhost:3001/api/markets?question=SOL" | jq .
+
+# Combine multiple filters
+curl -s "http://localhost:3001/api/markets?status=active&question=SOL&sortBy=tvl&order=desc" | jq .
+
+# Filter by authority address
+curl -s "http://localhost:3001/api/markets?authority=9CtkxgXqNF3yvGr4u9jdVByyZknBH4SoqPgNpRbX2sjP" | jq .
+
+# Filter by mint address
+curl -s "http://localhost:3001/api/markets?mint=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU" | jq .
 
 ---
 
@@ -425,3 +449,6 @@ CORS is enabled for development and production environments:
 - **Pagination**: Maximum limit is enforced at 100 items per request
 - **Sorting**: Default sorting is by `createdAt` in descending order (newest first)
 - **Validation**: Input parameters are validated and appropriate error messages are returned
+- **Filtering**: Multiple filters can be combined and work with sorting and pagination
+- **Question Search**: Question filtering is case-insensitive and uses partial matching
+- **Filter Persistence**: Applied filters are included in the response for transparency
