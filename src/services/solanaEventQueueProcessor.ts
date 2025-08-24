@@ -29,7 +29,7 @@ export const processSolanaEvent = async (job: Job<SolanaEventJob>): Promise<void
         await handleSellSharesEvent(timestamp, data);
         break;
       case 'initMarketStatsEvent':
-        await handleInitMarketStatsEvent(timestamp, data);
+        await handleInitMarketStatsEvent(data);
         break;
       case 'marketSettledEvent':
         await handleMarketSettledEvent(timestamp, data);
@@ -51,6 +51,7 @@ async function handleRevealProbsEvent(timestamp: string, data: Event['revealProb
   const { marketId, probs, votes } = data;
   
   try {
+    await checkOrCreateMarket(marketId);
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
@@ -74,6 +75,7 @@ async function handleBuySharesEvent(timestamp: string, data: Event['buySharesEve
   }
 
   try {
+    await checkOrCreateMarket(marketId);
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
@@ -97,6 +99,7 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
   }
 
   try {
+    await checkOrCreateMarket(marketId);
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
@@ -112,8 +115,20 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
   }
 }
 
+async function checkOrCreateMarket(marketId: number): Promise<void> {
 
-async function handleInitMarketStatsEvent(timestamp: string, data: Event['initMarketStatsEvent']): Promise<void> {
+  const marketData = await prisma.market.findUnique({
+    where: { id: marketId.toString() },
+  });
+  if (marketData) {
+    return;
+  }
+
+  await handleInitMarketStatsEvent({ marketId: marketId });
+}
+
+
+async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']): Promise<void> {
   const { marketId } = data;
   const marketData = await getMarketData(marketId);
   try {
@@ -165,6 +180,8 @@ async function handleInitMarketStatsEvent(timestamp: string, data: Event['initMa
 async function handleMarketSettledEvent(timestamp: string, data: Event['marketSettledEvent']): Promise<void> {
   console.log('Processing market settled event:', data);
   const { marketId, winningOutcome, probs, votes } = data;
+
+  await checkOrCreateMarket(marketId);
   
   try {
     await prisma.market.update({
