@@ -1,7 +1,7 @@
 import { Job } from 'bull';
 import { getMarketData } from './solanaEventMonitor';
 import { prisma } from '../config/database';
-import { IdlEvents } from "@coral-xyz/anchor";
+import { BN, IdlEvents } from "@coral-xyz/anchor";
 import { ArxPredict } from '../contract/arx_predict';
 
 type Event = IdlEvents<ArxPredict>; // Commented out as it's not being used
@@ -46,17 +46,21 @@ export const processSolanaEvent = async (job: Job<SolanaEventJob>): Promise<void
   }
 };
 
+function convertBNToNumber(bnString: string): number {
+  const cleanHex = bnString.startsWith('0x') ? bnString.slice(2) : bnString;
+  return new BN(cleanHex, 16).toNumber();
+}
+
 async function handleRevealProbsEvent(timestamp: string, data: Event['revealProbsEvent']): Promise<void> {
   console.log('Processing reveal probabilities event:', data);
   const { marketId, probs, votes } = data;
-  
   try {
     await checkOrCreateMarket(marketId);
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
         probs: probs,
-        votes: votes.map(v => v.toNumber()),
+        votes: votes.map(v => convertBNToNumber(v.toString())),
         lastRevealProbsEventTimestamp: new Date(timestamp)
       }
     });
@@ -79,7 +83,7 @@ async function handleBuySharesEvent(timestamp: string, data: Event['buySharesEve
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
-        tvl: tvl.toNumber(),
+        tvl: convertBNToNumber(tvl.toString()),
         numBuyEvents: { increment: 1 },
         lastBuySharesEventTimestamp: new Date(timestamp)
       }
@@ -103,7 +107,7 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
     await prisma.market.update({
       where: { id: marketId.toString() },
       data: {
-        tvl: tvl.toNumber(),
+        tvl: convertBNToNumber(tvl.toString()),
         numSellEvents: { increment: 1 },
         lastSellSharesEventTimestamp: new Date(timestamp)
       }
@@ -139,12 +143,12 @@ async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']): 
         question: marketData.question,
         options: marketData.options,
         probs: marketData.probsRevealed, 
-        votes: marketData.votesRevealed.map(x => x.toNumber()),
-        liquidityParameter: marketData.liquidityParameter,
+        votes: marketData.votesRevealed.map(x => convertBNToNumber(x.toString())),
+        liquidityParameter: convertBNToNumber(marketData.liquidityParameter.toString()),
         mint: marketData.mint.toString(),
-        tvl: marketData.tvl.toNumber(),
+        tvl: convertBNToNumber(marketData.tvl.toString()),
         status: marketData.status.toString(), //Inactive, Active, Settled
-        marketUpdatedAt: marketData.updatedAt.toNumber(),
+        marketUpdatedAt: convertBNToNumber(marketData.updatedAt.toString()),
         winningOption: marketData.winningOutcome,
       },
       create: {
@@ -153,12 +157,12 @@ async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']): 
         question: marketData.question,
         options: marketData.options,
         probs: marketData.probsRevealed, 
-        votes: marketData.votesRevealed.map(x => x.toNumber()),
-        liquidityParameter: marketData.liquidityParameter,
+        votes: marketData.votesRevealed.map(x => convertBNToNumber(x.toString())),
+        liquidityParameter: convertBNToNumber(marketData.liquidityParameter.toString()),
         mint: marketData.mint.toString(),
-        tvl: marketData.tvl.toNumber(),
+        tvl: convertBNToNumber(marketData.tvl.toString()),
         status: marketData.status.toString(), //Inactive, Active, Settled
-        marketUpdatedAt: marketData.updatedAt.toNumber(),
+        marketUpdatedAt: convertBNToNumber(marketData.updatedAt.toString()),
         winningOption: marketData.winningOutcome,
         numBuyEvents: 0,
         numSellEvents: 0,
@@ -189,7 +193,7 @@ async function handleMarketSettledEvent(timestamp: string, data: Event['marketSe
       data: {
         winningOption: winningOutcome,
         probs: probs,
-        votes: votes.map(v => v.toNumber()),
+        votes: votes.map(v => convertBNToNumber(v.toString())),
         status: 'Settled',
         lastMarketSettledEventTimestamp: new Date(timestamp)
       }
