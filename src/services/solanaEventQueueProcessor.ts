@@ -1,5 +1,5 @@
 import { Job } from 'bull';
-import { getMarketData } from './solanaEventMonitor';
+import { getMarketData } from '../utils/solana';
 import { prisma } from '../config/database';
 import { IdlEvents } from "@coral-xyz/anchor";
 import { ArxPredict } from '../contract/arx_predict';

@@ -1,33 +1,9 @@
-import { AnchorProvider, BN, IdlEvents, Program, Wallet } from "@coral-xyz/anchor";
+import { IdlEvents } from "@coral-xyz/anchor";
 import { ArxPredict } from "../contract/arx_predict";
-// @ts-ignore
-import * as IDL from "../contract/arx_predict.json";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import Bull from "bull";
-import { randomBytes } from "crypto";
-import {
-  awaitComputationFinalization,
-  getCompDefAccOffset,
-  getMXEAccAddress,
-  getMempoolAccAddress,
-  getCompDefAccAddress,
-  getExecutingPoolAccAddress,
-  getComputationAccAddress,
-  getClusterAccAddress,
-} from "@arcium-hq/client";
-import { loadWalletFromEnv } from "../utils/solana";
+import { program } from "../utils/solana";
 
 type Event = IdlEvents<ArxPredict>;
-
-const connection = new Connection(
-  process.env["SOLANA_RPC_URL"] || "https://api.devnet.solana.com",
-  "confirmed"
-);
-const wallet = Keypair.generate();
-const provider = new AnchorProvider(connection, new Wallet(wallet), {
-  commitment: "confirmed",
-});
-const program = new Program(IDL as any, provider) as Program<ArxPredict>;
 
 export const eventNames: (keyof Event)[] = [
     "revealProbsEvent",
@@ -145,65 +121,4 @@ export class SolanaEventMonitor {
       listeners: Array.from(this.listeners.keys()),
     };
   }
-}
-
-
-export async function getMarketData(
-  marketId: number
-) {
-  const marketDataSeed = [
-    Buffer.from("market"),
-    new BN(marketId).toArrayLike(Buffer, "le", 4),
-  ];
-  const marketDataPDA = PublicKey.findProgramAddressSync(marketDataSeed, program.programId)[0];
-  const marketData = await program.account.marketAccount.fetch(marketDataPDA);
-  return marketData;
-}
-
-export async function revealProbs(
-  marketId: number,
-) {
-  try {
-    console.log("Revealing probs for market", marketId);
-    const wallet = await loadWalletFromEnv();
-    console.log("Wallet public key:", wallet.publicKey.toBase58());
-    const clusterOffset = 1116522165;
-    const clusterAccount = getClusterAccAddress(clusterOffset);
-    const revealComputationOffset = new BN(randomBytes(8), "hex");
-    const revealQueueSig = await program.methods
-      .revealProbs(revealComputationOffset, marketId)
-      .accountsPartial({
-        computationAccount: getComputationAccAddress(
-          program.programId,
-          revealComputationOffset
-        ),
-        clusterAccount: clusterAccount,
-        mxeAccount: getMXEAccAddress(program.programId),
-        mempoolAccount: getMempoolAccAddress(program.programId),
-        executingPool: getExecutingPoolAccAddress(program.programId),
-        compDefAccount: getCompDefAccAddress(
-          program.programId,
-          Buffer.from(getCompDefAccOffset("reveal_probs")).readUInt32LE()
-        ),
-        payer: wallet.publicKey,
-      })
-      .signers([wallet])
-      .rpc({ commitment: "confirmed" });
-
-    const revealFinalizeSig = await awaitComputationFinalization(
-      provider,
-      revealComputationOffset,
-      program.programId,
-      "confirmed"
-    );
-
-    return {
-      revealQueueSig,
-      revealFinalizeSig,
-    }
-    
-  } catch (error) {
-    console.error("Failed to reveal probs for market", marketId, error);
-  }
-  return null;
 }

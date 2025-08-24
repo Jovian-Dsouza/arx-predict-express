@@ -17,8 +17,9 @@ import { errorHandler, notFound } from './middleware/errorHandler';
 import { initRedis, closeConnections, checkDatabaseHealth } from './config/database';
 
 // Import Solana event monitor and queue
-import { revealProbs, SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
+import { SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
 import { processSolanaEvent } from './services/solanaEventQueueProcessor';
+import { revealProbs } from './utils/solana';
 
 // Import cron service
 import cronService from './services/cronService';
@@ -95,6 +96,7 @@ app.get('/', (_req, res) => {
       webhook: '/api/helius/webhook',
       markets: '/api/markets',
       cron: '/health/cron',
+      wallet: '/health/wallet',
     },
   });
 });
