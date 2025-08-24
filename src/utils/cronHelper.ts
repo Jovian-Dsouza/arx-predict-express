@@ -1,15 +1,29 @@
 import { prisma } from "../config/database";
 import { revealProbs } from "./solana";
 
+// Find all active markets that need to be revealed
+// lastRevealProbsEventTimestamp should be less than 1 minute ago
+// Only update if there buy sell events in the last 1 minute
 export async function findAllActiveMarketsNeedingReveal() {
     const oneMinuteAgo = new Date(Date.now() -  61 * 1000);
-    
     const markets = await prisma.market.findMany({
         where: {
             status: "active",
             lastRevealProbsEventTimestamp: {
                 lt: oneMinuteAgo
-            }
+            },
+            OR: [
+                {
+                    lastBuySharesEventTimestamp: {
+                        gte: oneMinuteAgo
+                    }
+                },
+                {
+                    lastSellSharesEventTimestamp: {
+                        gte: oneMinuteAgo
+                    }
+                }
+            ]
         }
     })
     return markets;
