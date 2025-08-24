@@ -125,12 +125,12 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
 
 async function checkOrCreateMarket(marketId: number): Promise<void> {
 
-  // const marketData = await prisma.market.findUnique({
-  //   where: { id: marketId.toString() },
-  // });
-  // if (marketData) {
-  //   return;
-  // }
+  const marketData = await prisma.market.findUnique({
+    where: { id: marketId.toString() },
+  });
+  if (marketData) {
+    return;
+  }
 
   await handleInitMarketStatsEvent({ marketId: marketId });
 }
