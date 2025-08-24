@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { prisma } from '../config/database';
 import { publishMessage } from '../config/ably';
 import dotenv from 'dotenv';
 
@@ -64,15 +63,6 @@ export class HeliusService {
   // Process incoming webhook events
   static async processWebhookEvent(event: HeliusWebhookEvent): Promise<void> {
     try {
-      // Store webhook event in database
-      await prisma.heliusWebhook.create({
-        data: {
-          eventType: event.type,
-          payload: event as any, // Cast to any for Prisma compatibility
-          processed: false,
-        },
-      });
-
       // Process based on event type
       switch (event.type) {
         case 'NFT_MINT':
@@ -90,19 +80,6 @@ export class HeliusService {
         default:
           console.log(`Unhandled event type: ${event.type}`);
       }
-
-      // Mark as processed - use eventType and timestamp for identification
-      await prisma.heliusWebhook.updateMany({
-        where: {
-          eventType: event.type,
-          createdAt: {
-            gte: new Date(Date.now() - 60000), // Within last minute
-          },
-        },
-        data: {
-          processed: true,
-        },
-      });
 
       // Publish to Ably channel for real-time updates
       await publishMessage('helius-events', 'webhook-received', {
@@ -169,21 +146,6 @@ export class HeliusService {
       return response.data[0];
     } catch (error) {
       console.error('Error fetching account info:', error);
-      throw error;
-    }
-  }
-
-  // Get webhook events from database
-  static async getWebhookEvents(limit: number = 100): Promise<any[]> {
-    try {
-      return await prisma.heliusWebhook.findMany({
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-      });
-    } catch (error) {
-      console.error('Error fetching webhook events:', error);
       throw error;
     }
   }

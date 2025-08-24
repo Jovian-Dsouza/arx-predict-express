@@ -7,7 +7,6 @@ import dotenv from 'dotenv';
 
 // Import routes
 import healthRoutes from './routes/healthRoutes';
-import chatRoutes from './routes/chatRoutes';
 import heliusRoutes from './routes/heliusRoutes';
 
 // Import middleware
@@ -75,7 +74,6 @@ app.use((req, _res, next) => {
 app.use('/health', healthRoutes);
 
 // API routes
-app.use('/api/chat', chatRoutes);
 app.use('/api/helius', heliusRoutes);
 
 // Root route
