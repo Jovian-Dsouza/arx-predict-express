@@ -16,6 +16,9 @@ import { errorHandler, notFound } from './middleware/errorHandler';
 // Import database configuration
 import { initRedis, closeConnections } from './config/database';
 
+// Import Solana event monitor
+import { SolanaEventMonitor } from './services/solanaEventMonitor';
+
 // Load environment variables
 dotenv.config();
 
@@ -122,6 +125,30 @@ const startServer = async () => {
       console.log('💡 Start Redis with: redis-server');
     }
 
+    // Initialize Solana event monitor
+    let solanaMonitor: SolanaEventMonitor | null = null;
+    try {
+      const solanaRpcUrl = process.env['SOLANA_RPC_URL'];
+      const solanaProgramId = process.env['SOLANA_PROGRAM_ID'];
+      
+      if (solanaRpcUrl && solanaProgramId) {
+        solanaMonitor = new SolanaEventMonitor();
+        
+        await solanaMonitor.initialize();
+        await solanaMonitor.startMonitoring();
+        
+        // Set global reference for health checks
+        globalThis.solanaMonitor = solanaMonitor;
+        
+        console.log('🔗 Solana event monitoring started successfully');
+      } else {
+        console.warn('⚠️  Solana monitoring not configured - missing SOLANA_RPC_URL or SOLANA_PROGRAM_ID');
+      }
+    } catch (solanaError) {
+      const errorMessage = solanaError instanceof Error ? solanaError.message : 'Unknown error';
+      console.warn('⚠️  Solana event monitoring failed, continuing without it:', errorMessage);
+    }
+
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
@@ -129,6 +156,9 @@ const startServer = async () => {
       console.log(`💬 Chat API: http://localhost:${PORT}/api/chat`);
       console.log(`🔗 Helius API: http://localhost:${PORT}/api/helius`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      if (solanaMonitor) {
+        console.log(`🔗 Solana monitoring: Active`);
+      }
     });
 
   } catch (error) {
