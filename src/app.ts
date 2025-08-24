@@ -17,7 +17,7 @@ import { errorHandler, notFound } from './middleware/errorHandler';
 import { initRedis, closeConnections, checkDatabaseHealth } from './config/database';
 
 // Import Solana event monitor and queue
-import { SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
+import { revealProbs, SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
 import { processSolanaEvent } from './services/solanaEventQueueProcessor';
 
 // Import cron service
@@ -204,6 +204,7 @@ const startServer = async () => {
       console.log(`⏰ Cron service: Active`);
     });
 
+    await revealProbs(1);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
