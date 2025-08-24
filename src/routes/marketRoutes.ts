@@ -38,7 +38,7 @@ async function setCachedData(key: string, data: any, ttl: number = CACHE_TTL): P
 }
 
 // Helper function to invalidate market cache
-async function invalidateMarketCache(marketId: string): Promise<void> {
+export async function invalidateMarketCache(marketId: string): Promise<void> {
   try {
     const pattern = `${CACHE_PREFIX}*`;
     const keys = await redisClient.keys(pattern);

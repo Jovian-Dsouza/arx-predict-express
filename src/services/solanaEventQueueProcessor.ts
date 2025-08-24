@@ -1,8 +1,9 @@
 import { Job } from 'bull';
 import { getMarketData } from './solanaEventMonitor';
 import { prisma } from '../config/database';
-import { BN, IdlEvents } from "@coral-xyz/anchor";
+import { IdlEvents } from "@coral-xyz/anchor";
 import { ArxPredict } from '../contract/arx_predict';
+import { invalidateMarketCache } from '../routes/marketRoutes';
 
 type Event = IdlEvents<ArxPredict>; // Commented out as it's not being used
 
@@ -64,6 +65,7 @@ async function handleRevealProbsEvent(timestamp: string, data: Event['revealProb
       }
     });
     console.log(`✅ Updated market ${marketId} with reveal probabilities`);
+    invalidateMarketCache(marketId.toString());
   } catch (error) {
     console.error(`❌ Failed to update market ${marketId} with reveal probabilities:`, error);
     throw error;
@@ -88,6 +90,7 @@ async function handleBuySharesEvent(timestamp: string, data: Event['buySharesEve
       }
     });
     console.log(`✅ Updated market ${marketId} with buy shares event`);
+    invalidateMarketCache(marketId.toString());
   } catch (error) {
     console.error(`❌ Failed to update market ${marketId} with buy shares event:`, error);
     throw error;
@@ -112,6 +115,7 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
       }
     });
     console.log(`✅ Updated market ${marketId} with sell shares event`);
+    invalidateMarketCache(marketId.toString());
   } catch (error) {
     console.error(`❌ Failed to update market ${marketId} with sell shares event:`, error);
     throw error;
@@ -119,12 +123,12 @@ async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesE
 }
 
 export async function checkOrCreateMarket(marketId: number) {
-  // const marketData = await prisma.market.findUnique({
-  //   where: { id: marketId.toString() },
-  // });
-  // if (marketData) {
-  //   return marketData;
-  // }
+  const marketData = await prisma.market.findUnique({
+    where: { id: marketId.toString() },
+  });
+  if (marketData) {
+    return marketData;
+  }
 
   return await handleInitMarketStatsEvent({ marketId: marketId });
 }
@@ -134,7 +138,7 @@ async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']) {
   const { marketId } = data;
   const marketData = await getMarketData(marketId);
   try {
-    return await prisma.market.upsert({
+    const result = await prisma.market.upsert({
       where: { id: marketData.id.toString() },
       update: {
         authority: marketData.authority.toString(),
@@ -173,6 +177,8 @@ async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']) {
       }
     });
     console.log(`✅ Upserted market ${marketData.id} successfully`);
+    invalidateMarketCache(marketData.id.toString());
+    return result;
   } catch (error) {
     console.error(`❌ Failed to upsert market ${marketData.id}:`, error);
     throw error;
@@ -197,6 +203,7 @@ async function handleMarketSettledEvent(timestamp: string, data: Event['marketSe
       }
     });
     console.log(`✅ Updated market ${marketId} as settled`);
+    invalidateMarketCache(marketId.toString());
   } catch (error) {
     console.error(`❌ Failed to update market ${marketId} as settled:`, error);
     throw error;
