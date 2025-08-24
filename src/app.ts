@@ -3,7 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
 // Import routes
@@ -22,6 +21,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Trust proxy configuration to fix X-Forwarded-For header issues
+app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet({
@@ -44,20 +46,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // limit each IP to 100 requests per windowMs
-  message: {
-    success: false,
-    error: 'Too many requests from this IP, please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use('/api/', limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -85,6 +73,52 @@ app.use('/health', healthRoutes);
 // API routes
 app.use('/api/chat', chatRoutes);
 app.use('/api/helius', heliusRoutes);
+
+// Helius webhook authentication middleware
+const authenticateHeliusWebhook = (req: express.Request, res: express.Response, next: express.NextFunction): void | express.Response => {
+  const webhookSecret = process.env.HELIUS_WEBHOOK_SECRET;
+  
+  if (!webhookSecret) {
+    console.error('HELIUS_WEBHOOK_SECRET environment variable is not set');
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Webhook authentication not configured' 
+    });
+  }
+
+  const signature = req.headers['authorization'];
+  
+  if (!signature) {
+    console.error('Missing authorization header in webhook request');
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Missing authorization header' 
+    });
+  }
+
+  // Remove 'Bearer ' prefix if present
+  const token = signature.startsWith('Bearer ') ? signature.slice(7) : signature;
+  
+  if (token !== webhookSecret) {
+    console.error('Invalid webhook secret provided');
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Invalid authorization token' 
+    });
+  }
+
+  console.log('Helius webhook authenticated successfully');
+  next();
+};
+
+// Protected webhook route with authentication
+app.post('/webhook', authenticateHeliusWebhook, (req, res) => {
+  // req.body.forEach((event: any) => {
+  //   console.log('Blockchain event:', event);
+  // });
+  console.log('Helius webhook received:', req.body);
+  res.status(200).send('OK');
+});
 
 // Root route
 app.get('/', (_req, res) => {
