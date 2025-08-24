@@ -1,6 +1,7 @@
 import { Job } from 'bull';
 import { IdlEvents } from "@coral-xyz/anchor";
 import { ArxPredict } from "../contract/arx_predict";
+import { getMarketData } from './solanaEventMonitor';
 type Event = IdlEvents<ArxPredict>;
 
 interface SolanaEventJob {
@@ -15,32 +16,20 @@ export const processSolanaEvent = async (job: Job<SolanaEventJob>): Promise<void
   try {
     console.log(`[${timestamp}] 📡 Processing ${eventName} event:`, JSON.stringify(data, null, 2));
     switch (eventName) {
-      case 'voteEvent':
-        await handleVoteEvent(data);
-        break;
-      case 'revealResultEvent':
-        await handleRevealResultEvent(data);
-        break;
       case 'revealProbsEvent':
-        await handleRevealProbsEvent(data);
+        await handleRevealProbsEvent(timestamp, data);
         break;
       case 'buySharesEvent':
-        await handleBuySharesEvent(data);
+        await handleBuySharesEvent(timestamp, data);
         break;
       case 'sellSharesEvent':
-        await handleSellSharesEvent(data);
-        break;
-      case 'claimRewardsEvent':
-        await handleClaimRewardsEvent(data);
+        await handleSellSharesEvent(timestamp, data);
         break;
       case 'initMarketStatsEvent':
-        await handleInitMarketStatsEvent(data);
-        break;
-      case 'claimMarketFundsEvent':
-        await handleClaimMarketFundsEvent(data);
+        await handleInitMarketStatsEvent(timestamp, data);
         break;
       case 'marketSettledEvent':
-        await handleMarketSettledEvent(data);
+        await handleMarketSettledEvent(timestamp, data);
         break;
       default:
         console.warn(`Unknown event type: ${eventName}`);
@@ -50,52 +39,75 @@ export const processSolanaEvent = async (job: Job<SolanaEventJob>): Promise<void
     
   } catch (error) {
     console.error(`❌ Failed to process ${eventName} event:`, error);
-    throw error; // This will trigger the retry mechanism
+    throw error;
   }
 };
 
-// Event handler functions - implement your business logic here
-async function handleVoteEvent(data: Event['voteEvent']): Promise<void> {
-  // Handle vote event logic
-  console.log('Processing vote event:', data);
-}
-
-async function handleRevealResultEvent(data: Event['revealResultEvent']): Promise<void> {
-  // Handle reveal result event logic
-  console.log('Processing reveal result event:', data);
-}
-
-async function handleRevealProbsEvent(data: Event['revealProbsEvent']): Promise<void> {
+async function handleRevealProbsEvent(timestamp: string, data: Event['revealProbsEvent']): Promise<void> {
   // Handle reveal probabilities event logic
   console.log('Processing reveal probabilities event:', data);
+  const { marketId, probs, votes } = data;
+  //update db table 
+
+  //Store in db
 }
 
-async function handleBuySharesEvent(data: Event['buySharesEvent']): Promise<void> {
+async function handleBuySharesEvent(timestamp: string, data: Event['buySharesEvent']): Promise<void> {
   // Handle buy shares event logic
   console.log('Processing buy shares event:', data);
+  const { marketId, status, amount, tvl } = data;
+  if (status === 0) {
+    return;
+  }
+
+  //update db table 
 }
 
-async function handleSellSharesEvent(data: Event['sellSharesEvent']): Promise<void> {
+async function handleSellSharesEvent(timestamp: string, data: Event['sellSharesEvent']): Promise<void> {
   // Handle sell shares event logic
   console.log('Processing sell shares event:', data);
+  const { marketId, status, amount, tvl } = data;
+  if (status === 0) {
+    return;
+  }
+
+  //update db table 
 }
 
-async function handleClaimRewardsEvent(data: Event['claimRewardsEvent']): Promise<void> {
-  // Handle claim rewards event logic
-  console.log('Processing claim rewards event:', data);
-}
 
-async function handleInitMarketStatsEvent(data: Event['initMarketStatsEvent']): Promise<void> {
-  // Handle init market stats event logic
+async function handleInitMarketStatsEvent(timestamp: string, data: Event['initMarketStatsEvent']): Promise<void> {
   console.log('Processing init market stats event:', data);
+  const { marketId } = data;
+  const marketData = await getMarketData(marketId);
+  const dbData = {
+    id: marketData.id,
+    authority: marketData.authority.toString(),
+    question: marketData.question,
+    options: marketData.options,
+    probs: marketData.probsRevealed, 
+    votes: marketData.votesRevealed.map(x => x.toNumber()),
+    liquidityParameter: marketData.liquidityParameter,
+    mint: marketData.mint.toString(),
+    tvl: marketData.tvl.toNumber(),
+    status: marketData.status.toString(), //Inactive, Active, Settled
+    updatedAt: marketData.updatedAt.toNumber(),
+    winningOption: marketData.winningOutcome,
+    numBuyEvents: 0,
+    numSellEvents:0,
+    lastSellSharesEventTimestamp: null,
+    lastBuySharesEventTimestamp: null,
+    lastClaimRewardsEventTimestamp: null,
+    lastRevealProbsEventTimestamp: null,
+    lastClaimMarketFundsEventTimestamp: null,
+    lastMarketSettledEventTimestamp: null,
+  }
+  console.log(`Market data=> ${JSON.stringify(dbData)}`);
+  //Store in db
 }
 
-async function handleClaimMarketFundsEvent(data: Event['claimMarketFundsEvent']): Promise<void> {
-  // Handle claim market funds event logic
-  console.log('Processing claim market funds event:', data);
-}
-
-async function handleMarketSettledEvent(data: Event['marketSettledEvent']): Promise<void> {
+async function handleMarketSettledEvent(timestamp: string, data: Event['marketSettledEvent']): Promise<void> {
   // Handle market settled event logic
   console.log('Processing market settled event:', data);
+  const { marketId, winningOutcome, probs, votes } = data;
+  //update db table 
 }

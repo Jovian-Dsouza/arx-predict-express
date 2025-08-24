@@ -1,20 +1,27 @@
-import { AnchorProvider, IdlEvents, Program, Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, IdlEvents, Program, Wallet } from "@coral-xyz/anchor";
 import { ArxPredict } from "../contract/arx_predict";
 // @ts-ignore
 import * as IDL from "../contract/arx_predict.json";
-import { Connection, Keypair } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import Bull from "bull";
+
 type Event = IdlEvents<ArxPredict>;
 
-const eventNames: (keyof Event)[] = [
-    "voteEvent",
-    "revealResultEvent",
+const connection = new Connection(
+  process.env["SOLANA_RPC_URL"] || "https://api.devnet.solana.com",
+  "confirmed"
+);
+const wallet = Keypair.generate();
+const provider = new AnchorProvider(connection, new Wallet(wallet), {
+  commitment: "confirmed",
+});
+const program = new Program(IDL as any, provider) as Program<ArxPredict>;
+
+export const eventNames: (keyof Event)[] = [
     "revealProbsEvent",
     "buySharesEvent",
     "sellSharesEvent",
-    "claimRewardsEvent",
     "initMarketStatsEvent",
-    "claimMarketFundsEvent",
     "marketSettledEvent",
 ];
 
@@ -48,26 +55,13 @@ solanaEventQueue.on('completed', (job) => {
 export class SolanaEventMonitor {
   private isRunning: boolean = false;
   private listeners: Map<string, any> = new Map();
-  private program: Program<ArxPredict> | null = null;
 
-  constructor() {
-    this.program = null;
-  }
+  constructor() { }
 
   async initialize(): Promise<void> {
     try {
-      console.log("🔧 Initializing Solana event monitor...");
-
-      const connection = new Connection(
-        process.env["SOLANA_RPC_URL"] || "https://api.devnet.solana.com",
-        "confirmed"
-      );
-      const wallet = Keypair.generate();
-      const provider = new AnchorProvider(connection, new Wallet(wallet), {
-        commitment: "confirmed",
-      });
-      this.program = new Program(IDL as any, provider) as Program<ArxPredict>;
-      console.log("Program ID:", this.program.programId.toBase58());
+      console.log("🔧 Initializing Solana event monitor...");      
+      console.log("Program ID:", program.programId.toBase58());
       console.log("✅ Solana event monitor initialized successfully");
     } catch (error) {
       console.error("❌ Failed to initialize Solana event monitor:", error);
@@ -76,11 +70,6 @@ export class SolanaEventMonitor {
   }
 
   async startMonitoring(): Promise<void> {
-    if (!this.program) {
-      console.error("❌ Program not initialized");
-      return;
-    }
-
     if (this.isRunning) {
       console.log("⚠️ Monitor is already running");
       return;
@@ -91,7 +80,7 @@ export class SolanaEventMonitor {
 
     try {
       eventNames.forEach((eventName) => {
-        this.listeners.set(eventName, this.program?.addEventListener(
+        this.listeners.set(eventName, program.addEventListener(
           eventName,
           async (event) => {
             const timestamp = new Date().toISOString();
@@ -145,3 +134,17 @@ export class SolanaEventMonitor {
     };
   }
 }
+
+
+export async function getMarketData(
+  marketId: number
+) {
+  const marketDataSeed = [
+    Buffer.from("market"),
+    new BN(marketId).toArrayLike(Buffer, "le", 4),
+  ];
+  const marketDataPDA = PublicKey.findProgramAddressSync(marketDataSeed, program.programId)[0];
+  const marketData = await program.account.marketAccount.fetch(marketDataPDA);
+  return marketData;
+}
+
