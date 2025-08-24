@@ -16,8 +16,9 @@ import { errorHandler, notFound } from './middleware/errorHandler';
 // Import database configuration
 import { initRedis, closeConnections } from './config/database';
 
-// Import Solana event monitor
-import { SolanaEventMonitor } from './services/solanaEventMonitor';
+// Import Solana event monitor and queue
+import { SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMonitor';
+import { processSolanaEvent } from './services/solanaEventQueueProcessor';
 
 // Load environment variables
 dotenv.config();
@@ -103,12 +104,14 @@ app.use(errorHandler);
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully');
   await closeConnections();
+  await solanaEventQueue.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully');
   await closeConnections();
+  await solanaEventQueue.close();
   process.exit(0);
 });
 
@@ -149,6 +152,15 @@ const startServer = async () => {
       console.warn('⚠️  Solana event monitoring failed, continuing without it:', errorMessage);
     }
 
+    // Setup Solana event queue processor
+    try {
+      solanaEventQueue.process(processSolanaEvent);
+      console.log('✅ Solana event queue processor started successfully');
+    } catch (queueError) {
+      const errorMessage = queueError instanceof Error ? queueError.message : 'Unknown error';
+      console.warn('⚠️  Solana event queue processor failed, continuing without it:', errorMessage);
+    }
+
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
@@ -159,6 +171,7 @@ const startServer = async () => {
       if (solanaMonitor) {
         console.log(`🔗 Solana monitoring: Active`);
       }
+      console.log(`📋 Solana event queue: Active`);
     });
 
   } catch (error) {

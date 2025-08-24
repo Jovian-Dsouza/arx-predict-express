@@ -3,6 +3,7 @@ import { ArxPredict } from "../contract/arx_predict";
 // @ts-ignore
 import * as IDL from "../contract/arx_predict.json";
 import { Connection, Keypair } from "@solana/web3.js";
+import Bull from "bull";
 type Event = IdlEvents<ArxPredict>;
 
 const eventNames: (keyof Event)[] = [
@@ -16,6 +17,32 @@ const eventNames: (keyof Event)[] = [
     "claimMarketFundsEvent",
     "marketSettledEvent",
 ];
+
+export const solanaEventQueue = new Bull("solana-events", {
+  redis: process.env.REDIS_URL || 'redis://localhost:6379',
+  defaultJobOptions: {
+    removeOnComplete: 100, // Keep last 100 completed jobs
+    removeOnFail: 50, // Keep last 50 failed jobs
+    attempts: 3, // Retry failed jobs up to 3 times
+    backoff: {
+      type: "exponential",
+      delay: 2000, // Start with 2 second delay
+    },
+  },
+});
+
+// Add error handling for the queue
+solanaEventQueue.on('error', (error) => {
+  console.error('❌ Solana event queue error:', error);
+});
+
+solanaEventQueue.on('failed', (job, error) => {
+  console.error(`❌ Job ${job.id} failed:`, error);
+});
+
+solanaEventQueue.on('completed', (job) => {
+  console.log(`✅ Job ${job.id} completed successfully`);
+});
 
 
 export class SolanaEventMonitor {
@@ -66,11 +93,20 @@ export class SolanaEventMonitor {
       eventNames.forEach((eventName) => {
         this.listeners.set(eventName, this.program?.addEventListener(
           eventName,
-          (event) => {
+          async (event) => {
             const timestamp = new Date().toISOString();
-            console.log(`[${timestamp}] 📡 ${eventName}:`);
-            console.log(JSON.stringify(event, null, 2));
-            console.log("─".repeat(50));
+            console.log(`[${timestamp}] 📡 ${eventName} event received, adding to queue...`);
+            
+            try {
+              await solanaEventQueue.add({
+                eventName,
+                timestamp,
+                data: event
+              });
+              console.log(`✅ ${eventName} event added to queue successfully`);
+            } catch (error) {
+              console.error(`❌ Failed to add ${eventName} event to queue:`, error);
+            }
           }
         ));
         console.log(`✅ Listening for ${eventName} events`);
