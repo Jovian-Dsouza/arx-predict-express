@@ -2,7 +2,8 @@
 FROM node:24.5.0-alpine AS base
 
 # Install dependencies for node-gyp and other native modules
-RUN apk add --no-cache python3 make g++ curl
+# Use OpenSSL 3.x which is compatible with Node.js 24 and Prisma
+RUN apk add --no-cache python3 make g++ curl openssl openssl-dev
 
 # Set working directory
 WORKDIR /app
@@ -10,8 +11,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL dependencies (including dev dependencies needed for building)
+RUN npm ci
 
 # # Development stage
 # FROM base AS development
@@ -28,8 +29,8 @@ RUN npm ci --only=production && npm cache clean --force
 # # Expose port
 # EXPOSE 3000
 
-# Start development server with migrations
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]
+# # Start development server with migrations
+# CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]
 
 # Production stage
 FROM base AS production
@@ -43,8 +44,9 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
-# Remove source files and dev dependencies
-RUN rm -rf src/ prisma/ docker/ .env.example README.md
+# Remove source files, dev dependencies, and keep only production dependencies
+# Keep Prisma schema for migrations, but remove other unnecessary files
+RUN npm prune --production && rm -rf src/ docker/ .env.example README.md
 
 # Expose port
 EXPOSE 3001

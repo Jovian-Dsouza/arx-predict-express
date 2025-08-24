@@ -2,10 +2,10 @@
   "name": "arx-predict-express",
   "version": "1.0.0",
   "description": "Express server with TypeScript, Redis, PostgreSQL, Ably chat, and Helius webhook support",
-  "main": "dist/index.js",
+  "main": "dist/app.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/app.js",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
