@@ -15,8 +15,8 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
-    # networks:
-    #   - arx-network-prod
+    networks:
+      - arx-network-prod
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arx_user} -d ${POSTGRES_DB:-arx_predict_db}"]
       interval: 30s
@@ -40,8 +40,8 @@ services:
       - redis_data_prod:/data
       - ./docker/redis/redis.prod.conf:/usr/local/etc/redis/redis.conf
     command: redis-server /usr/local/etc/redis/redis.conf
-    # networks:
-    #   - arx-network-prod
+    networks:
+      - arx-network-prod
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -86,8 +86,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # networks:
-    #   - arx-network-prod
+    networks:
+      - arx-network-prod
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 60s
@@ -110,9 +110,9 @@ volumes:
   redis_data_prod:
     driver: local
 
-# networks:
-#   arx-network-prod:
-#     driver: bridge
-#     ipam:
-#       config:
-#         - subnet: 172.21.0.0/16
+networks:
+  arx-network-prod:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
