@@ -96,7 +96,6 @@ ehthumbs.db
 Thumbs.db
 
 # Prisma
-prisma/migrations/
 *.db
 *.db-journal
 
