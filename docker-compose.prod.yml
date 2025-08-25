@@ -67,7 +67,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-arx_user}:${POSTGRES_PASSWORD:-arx_password}@postgres:5433/${POSTGRES_DB:-arx_predict_db}
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
