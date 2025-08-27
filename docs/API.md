@@ -258,6 +258,224 @@ curl -X DELETE "http://localhost:3001/api/markets/cache" | jq .
 
 ---
 
+## Price APIs
+
+**Available Endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/prices/markets` | Get list of all markets with price data |
+| `GET` | `/api/prices/markets/:marketId` | Get price history for a specific market |
+| `DELETE` | `/api/prices/markets/:marketId` | Clear price data for a specific market |
+| `GET` | `/api/prices/health` | Health check endpoint for price service |
+
+---
+
+### 1. Get Markets with Price Data
+
+Retrieves a list of all markets that have price data available.
+
+**Endpoint:** `GET /api/prices/markets`
+
+**Response Format:**
+
+```json
+{
+  "markets": ["string"],
+  "count": number
+}
+```
+
+**Response Fields:**
+
+| Field    | Type     | Description                                    |
+|----------|----------|------------------------------------------------|
+| `markets` | string[] | Array of market IDs that have price data      |
+| `count`   | number   | Total number of markets with price data       |
+
+**HTTP Status Codes:**
+
+- `200` - Success
+- `500` - Internal Server Error
+
+**Example Request:**
+
+```bash
+# Get all markets with price data
+curl -s "http://localhost:3001/api/prices/markets" | jq .
+```
+
+---
+
+### 2. Get Market Price History
+
+Retrieves price history for a specific market. Can optionally filter by a specific option.
+
+**Endpoint:** `GET /api/prices/markets/:marketId`
+
+**Path Parameters:**
+
+| Parameter | Type   | Required | Description           |
+|-----------|--------|----------|-----------------------|
+| `marketId` | string | Yes      | Unique market ID      |
+
+**Query Parameters:**
+
+| Parameter | Type    | Required | Description                                    |
+|-----------|---------|----------|------------------------------------------------|
+| `option`  | number  | No       | Option index (0-based) to filter prices for   |
+
+**Response Format (All Options):**
+
+```json
+{
+  "marketId": "string",
+  "prices": [
+    {
+      "timestamp": "string",
+      "prob": number
+    }
+  ],
+  "count": number
+}
+```
+
+**Response Format (Specific Option):**
+
+```json
+{
+  "marketId": "string",
+  "optionIndex": number,
+  "prices": [
+    {
+      "timestamp": "string",
+      "prob": number
+    }
+  ],
+  "count": number
+}
+```
+
+**Response Fields:**
+
+| Field        | Type     | Description                                    |
+|--------------|----------|------------------------------------------------|
+| `marketId`   | string   | The market ID                                  |
+| `optionIndex`| number   | The option index (only present when filtering) |
+| `prices`     | array    | Array of price entries                         |
+| `count`      | number   | Number of price entries                        |
+
+**Price Entry Object:**
+
+| Field       | Type   | Description                                    |
+|-------------|--------|------------------------------------------------|
+| `timestamp` | string | ISO 8601 timestamp of the price entry         |
+| `prob`      | number | Probability value (0.0 to 1.0)                |
+
+**HTTP Status Codes:**
+
+- `200` - Success
+- `400` - Bad Request (invalid option index)
+- `500` - Internal Server Error
+
+**Example Requests:**
+
+```bash
+# Get all price history for market "1"
+curl -s "http://localhost:3001/api/prices/markets/1" | jq .
+
+# Get price history for option 0 (first option) in market "1"
+curl -s "http://localhost:3001/api/prices/markets/1?option=0" | jq .
+
+# Get price history for option 1 (second option) in market "1"
+curl -s "http://localhost:3001/api/prices/markets/1?option=1" | jq .
+
+# Test with invalid option index
+curl -s "http://localhost:3001/api/prices/markets/1?option=-1" | jq .
+```
+
+---
+
+### 3. Clear Market Price Data
+
+Removes all price history data for a specific market.
+
+**Endpoint:** `DELETE /api/prices/markets/:marketId`
+
+**Path Parameters:**
+
+| Parameter | Type   | Required | Description           |
+|-----------|--------|----------|-----------------------|
+| `marketId` | string | Yes      | Unique market ID      |
+
+**Response Format:**
+
+```json
+{
+  "message": "string",
+  "marketId": "string"
+}
+```
+
+**Response Fields:**
+
+| Field      | Type   | Description                                    |
+|------------|--------|------------------------------------------------|
+| `message`  | string | Confirmation message                           |
+| `marketId` | string | The market ID that was cleared                |
+
+**HTTP Status Codes:**
+
+- `200` - Success
+- `500` - Internal Server Error
+
+**Example Request:**
+
+```bash
+# Clear price data for market "1"
+curl -X DELETE "http://localhost:3001/api/prices/markets/1" | jq .
+```
+
+---
+
+### 4. Price Service Health Check
+
+Checks the health status of the price service and provides basic statistics.
+
+**Endpoint:** `GET /api/prices/health`
+
+**Response Format:**
+
+```json
+{
+  "status": "string",
+  "marketCount": number,
+  "timestamp": "string"
+}
+```
+
+**Response Fields:**
+
+| Field         | Type   | Description                                    |
+|---------------|--------|------------------------------------------------|
+| `status`      | string | Service status ("healthy" or "unhealthy")     |
+| `marketCount` | number | Number of markets with price data             |
+| `timestamp`   | string | ISO 8601 timestamp of the health check       |
+
+**HTTP Status Codes:**
+
+- `200` - Service healthy
+- `503` - Service unhealthy
+
+**Example Request:**
+
+```bash
+# Check price service health
+curl -s "http://localhost:3001/api/prices/health" | jq .
+```
+
+---
+
 ## Data Types
 
 ### Market Object
@@ -286,6 +504,13 @@ curl -X DELETE "http://localhost:3001/api/markets/cache" | jq .
 | `lastMarketSettledEventTimestamp`    | string \| null      | Market settlement timestamp                    |
 | `createdAt`                          | string              | Market creation timestamp                      |
 | `updatedAt`                          | string              | Last update timestamp                          |
+
+### Price Entry Object
+
+| Field       | Type   | Description                                    |
+|-------------|--------|------------------------------------------------|
+| `timestamp` | string | ISO 8601 timestamp of the price entry         |
+| `prob`      | number | Probability value (0.0 to 1.0)                |
 
 ### Pagination Object
 
@@ -413,3 +638,6 @@ CORS is enabled for development and production environments:
 - **Caching**: Redis caching is implemented for improved performance (5-minute TTL)
 - **Cache Invalidation**: Cache can be manually invalidated for specific markets or all data
 - **Smart Caching**: Only database results are cached; blockchain results are not cached
+- **Price Data Storage**: Price history is stored in Redis with a maximum of 100 entries per market
+- **Price Data Management**: Price data can be cleared per market to manage storage and data freshness
+- **Option Filtering**: Price history can be filtered by specific option index (0-based) for detailed analysis
