@@ -24,8 +24,8 @@ class CronService {
     // }, 'Heartbeat check every 5 seconds');
 
     // Example: Run every 2 minutes
-    this.addJob('cleanup', '*/2 * * * *', () => {
-      console.log('Running cleanup task every 2 minutes');
+    this.addJob('cleanup', '*/1 * * * *', () => {
+      console.log('Running cleanup task every 1 minutes');
       updateProbsForAllActiveMarkets();
     }, 'Updating probs for all active markets');
 
