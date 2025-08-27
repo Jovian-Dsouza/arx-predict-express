@@ -6,24 +6,31 @@ import { revealProbs } from "./solana";
 // Only update if there buy sell events in the last 1 minute
 export async function findAllActiveMarketsNeedingReveal() {
     const oneMinuteAgo = new Date(Date.now() -  61 * 1000);
+    // const markets = await prisma.market.findMany({
+    //     where: {
+    //         status: "active",
+    //         lastRevealProbsEventTimestamp: {
+    //             lt: oneMinuteAgo
+    //         },
+    //         OR: [
+    //             {
+    //                 lastBuySharesEventTimestamp: {
+    //                     gte: oneMinuteAgo
+    //                 }
+    //             },
+    //             {
+    //                 lastSellSharesEventTimestamp: {
+    //                     gte: oneMinuteAgo
+    //                 }
+    //             }
+    //         ]
+    //     }
+    // })
     const markets = await prisma.market.findMany({
         where: {
-            status: "active",
             lastRevealProbsEventTimestamp: {
                 lt: oneMinuteAgo
-            },
-            OR: [
-                {
-                    lastBuySharesEventTimestamp: {
-                        gte: oneMinuteAgo
-                    }
-                },
-                {
-                    lastSellSharesEventTimestamp: {
-                        gte: oneMinuteAgo
-                    }
-                }
-            ]
+            }
         }
     })
     return markets;
