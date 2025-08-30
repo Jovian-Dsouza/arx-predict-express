@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PriceService } from '../services/priceService';
+import { prisma } from '../config/database';
 
 const router = Router();
 
@@ -10,33 +11,13 @@ const router = Router();
 router.get('/markets/:marketId', async (req, res) => {
   try {
     const { marketId } = req.params;
-    const { option } = req.query;
-    
-    if (option !== undefined) {
-      // Get prices for a specific option
-      const optionIndex = parseInt(option as string);
-      if (isNaN(optionIndex) || optionIndex < 0) {
-        return res.status(400).json({ 
-          error: 'Invalid option index. Must be a non-negative integer.' 
-        });
-      }
-      
-      const prices = await PriceService.getMarketOptionPrices(marketId, optionIndex);
-      return res.json({
-        marketId,
-        optionIndex,
-        prices,
-        count: prices.length
-      });
-    } else {
-      // Get all prices for the market
-      const prices = await PriceService.getMarketPrices(marketId);
-      return res.json({
-        marketId,
-        prices,
-        count: prices.length
-      });
-    }
+    // Get all prices for the market
+    const prices = await PriceService.getMarketPrices(marketId);
+    return res.json({
+      marketId,
+      prices,
+      count: prices.length
+    });
   } catch (error) {
     console.error('❌ Error fetching market prices:', error);
     return res.status(500).json({ 

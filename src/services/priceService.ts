@@ -1,4 +1,4 @@
-import { redisClient } from '../config/database';
+import { prisma, redisClient } from '../config/database';
 
 interface PriceEntry {
   timestamp: string;
@@ -44,11 +44,23 @@ export class PriceService {
    * @returns Array of price entries
    */
   static async getMarketPrices(marketId: string): Promise<PriceEntry[]> {
+    const marketData = await prisma.market.findUnique({
+      where: { id: marketId.toString() },
+    });
+    if (!marketData) {
+      throw new Error('Market not found');
+    }
+    
     try {
+      const creationTime = marketData.createdAt.toISOString();
+      const initialPice = {
+        timestamp: creationTime,
+        prob: 0.5,
+      } 
       const key = this.getMarketKey(marketId);
       const rawEntries = await redisClient.lRange(key, 0, -1);
-      
-      return rawEntries.map(entry => JSON.parse(entry) as PriceEntry);
+      const prices = rawEntries.map(entry => JSON.parse(entry) as PriceEntry);
+      return [initialPice, ...prices];
     } catch (error) {
       console.error(`❌ Failed to get market prices for ${marketId}:`, error);
       throw error;
