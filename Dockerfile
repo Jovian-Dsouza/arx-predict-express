@@ -14,23 +14,6 @@ COPY package*.json ./
 # Install ALL dependencies (including dev dependencies needed for building)
 RUN npm ci
 
-# # Development stage
-# FROM base AS development
-
-# # Install development dependencies
-# RUN npm ci
-
-# # Copy source code
-# COPY . .
-
-# # Generate Prisma client
-# RUN npx prisma generate
-
-# # Expose port
-# EXPOSE 3000
-
-# # Start development server with migrations
-# CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]
 
 # Production stage
 FROM base AS production
