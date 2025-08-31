@@ -1,5 +1,5 @@
 import express from 'express';
-// import cors from 'cors';
+import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
@@ -49,14 +49,12 @@ app.use(helmet({
 }));
 
 // CORS configuration
-// app.use(cors({
-//   origin: process.env.NODE_ENV === 'production' 
-//     ? [process.env['FRONTEND_URL'] || 'http://localhost:3000', 'http://localhost:3000'] 
-//     : ['http://localhost:3000', 'http://localhost:3001'],
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-// }));
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
