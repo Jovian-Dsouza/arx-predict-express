@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { PriceService } from '../services/priceService';
-import { prisma } from '../config/database';
 
 const router = Router();
 
