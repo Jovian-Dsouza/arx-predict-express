@@ -102,6 +102,29 @@ services:
           memory: 512M
           cpus: '0.5'
 
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: arx-predict-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "9001:443"  # HTTPS on port 9001
+      - "9000:80"   # HTTP on port 9000 (optional, for redirects)
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/dokploy/traefik/dynamic/certificates/certificate-index-1080p-driver-oep88h:/etc/ssl/traefik:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - arx-network-prod
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 
 volumes:
   postgres_data_prod:
