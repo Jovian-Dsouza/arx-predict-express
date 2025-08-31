@@ -36,6 +36,14 @@ const PORT = process.env.PORT || 3001;
 // Trust proxy configuration to fix X-Forwarded-For header issues
 app.set('trust proxy', 1);
 
+// CORS configuration (must come before Helmet)
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
@@ -46,14 +54,8 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "https:"],
     },
   },
-}));
-
-// CORS configuration
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // Body parsing middleware
