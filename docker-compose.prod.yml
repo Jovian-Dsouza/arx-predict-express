@@ -38,7 +38,8 @@ services:
       - "6379:6379"  # Bind to localhost only
     volumes:
       - redis_data_prod:/data
-    command: redis-server --appendonly yes
+      - ./docker/redis/redis.prod.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - arx-network-prod
     healthcheck:
