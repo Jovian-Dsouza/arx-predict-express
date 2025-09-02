@@ -105,3 +105,11 @@ dump.rdb
 # Temporary files
 tmp/
 temp/
+
+# Generated market images
+public/images/markets/*.png
+public/images/markets/*.jpg
+public/images/markets/*.jpeg
+public/images/markets/*.gif
+public/images/markets/*.webp
+data/
