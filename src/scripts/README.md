@@ -68,14 +68,25 @@ npm run upload:images status
 npm run upload:images upload "" "/path/to/custom/images"
 ```
 
+### Upload with custom database URL:
+```bash
+npm run upload:images upload "" "data/marketImages" "postgresql://user:pass@localhost:5432/dbname"
+```
+
+### Check status with custom database URL:
+```bash
+npm run upload:images status "" "" "postgresql://user:pass@localhost:5432/dbname"
+```
+
 ## How It Works
 
-1. **Market Detection**: The script finds all markets where the `image` field is null or empty
-2. **File Lookup**: For each market, looks for an image file named `{marketId}.png` in the specified directory
-3. **File Validation**: Validates that the file exists and is a valid image format
-4. **Upload Process**: Uploads the image to UploadThing with metadata
-5. **Database Update**: Updates the market record with the UploadThing URL
-6. **Progress Tracking**: Provides detailed logging and progress updates
+1. **Database Connection**: The script first checks if it can connect to the database using the provided URL
+2. **Market Detection**: Finds all markets where the `image` field is null or empty
+3. **File Lookup**: For each market, looks for an image file named `{marketId}.png` in the specified directory
+4. **File Validation**: Validates that the file exists and is a valid image format
+5. **Upload Process**: Uploads the image to UploadThing with metadata
+6. **Database Update**: Updates the market record with the UploadThing URL
+7. **Progress Tracking**: Provides detailed logging and progress updates
 
 ## File Structure
 

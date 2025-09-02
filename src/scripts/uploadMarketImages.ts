@@ -7,10 +7,38 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-const prisma = new PrismaClient();
-
 // Initialize UploadThing API
 const utapi = new UTApi();
+
+/**
+ * Create Prisma client with custom database URL
+ */
+function createPrismaClient(databaseUrl?: string): PrismaClient {
+  if (databaseUrl) {
+    return new PrismaClient({
+      datasources: {
+        db: {
+          url: databaseUrl
+        }
+      }
+    });
+  }
+  return new PrismaClient();
+}
+
+/**
+ * Check if database is connected and accessible
+ */
+async function checkDatabaseConnection(prisma: PrismaClient): Promise<boolean> {
+  try {
+    await prisma.$connect();
+    console.log('✅ Database connection successful');
+    return true;
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    return false;
+  }
+}
 
 /**
  * Check if a file exists and is a valid image
@@ -74,9 +102,19 @@ async function uploadImageToUploadThing(filePath: string, marketId: string): Pro
 /**
  * Main function to upload images for markets without image URLs
  */
-async function uploadMarketImages(imagesDirectory: string = 'public/images/markets') {
+async function uploadMarketImages(imagesDirectory: string = 'data/marketImages', databaseUrl?: string) {
+  const prisma = createPrismaClient(databaseUrl);
+  
   try {
     console.log('Starting market image upload process...');
+    
+    // Check database connection first
+    const isDbConnected = await checkDatabaseConnection(prisma);
+    if (!isDbConnected) {
+      console.error('❌ Cannot proceed without database connection');
+      return;
+    }
+    
     console.log(`Looking for images in: ${imagesDirectory}`);
     
     // Check if images directory exists
@@ -165,8 +203,17 @@ async function uploadMarketImages(imagesDirectory: string = 'public/images/marke
 /**
  * Upload image for a specific market
  */
-async function uploadImageForMarket(marketId: string, imagesDirectory: string = 'public/images/markets') {
+async function uploadImageForMarket(marketId: string, imagesDirectory: string = 'data/marketImages', databaseUrl?: string) {
+  const prisma = createPrismaClient(databaseUrl);
+  
   try {
+    // Check database connection first
+    const isDbConnected = await checkDatabaseConnection(prisma);
+    if (!isDbConnected) {
+      console.error('❌ Cannot proceed without database connection');
+      return;
+    }
+    
     const market = await prisma.market.findUnique({
       where: { id: marketId },
       select: {
@@ -224,10 +271,19 @@ async function uploadImageForMarket(marketId: string, imagesDirectory: string = 
 /**
  * List all markets and their image status
  */
-async function listMarketImageStatus() {
+async function listMarketImageStatus(databaseUrl?: string) {
+  const prisma = createPrismaClient(databaseUrl);
+  
   try {
     console.log('📋 Market Image Status Report');
     console.log('=' .repeat(50));
+    
+    // Check database connection first
+    const isDbConnected = await checkDatabaseConnection(prisma);
+    if (!isDbConnected) {
+      console.error('❌ Cannot proceed without database connection');
+      return;
+    }
     
     const allMarkets = await prisma.market.findMany({
       select: {
@@ -268,23 +324,30 @@ if (require.main === module) {
   const command = args[0];
   const marketId = args[1];
   const imagesDir = args[2] || 'data/marketImages';
+  const databaseUrl = args[3] || process.env['DATABASE_URL'];
   
   switch (command) {
     case 'upload':
       if (marketId) {
-        uploadImageForMarket(marketId, imagesDir);
+        uploadImageForMarket(marketId, imagesDir, databaseUrl);
       } else {
-        uploadMarketImages(imagesDir);
+        uploadMarketImages(imagesDir, databaseUrl);
       }
       break;
     case 'status':
-      listMarketImageStatus();
+      listMarketImageStatus(databaseUrl);
       break;
     default:
       console.log('Usage:');
-      console.log('  npm run upload:images                    # Upload all missing images');
-      console.log('  npm run upload:images upload <marketId>  # Upload image for specific market');
-      console.log('  npm run upload:images status             # Show image status report');
+      console.log('  npm run upload:images                                    # Upload all missing images');
+      console.log('  npm run upload:images upload <marketId>                  # Upload image for specific market');
+      console.log('  npm run upload:images status                             # Show image status report');
+      console.log('  npm run upload:images upload <marketId> <imagesDir> <dbUrl>  # With custom paths');
+      console.log('');
+      console.log('Environment variables:');
+      console.log('  DATABASE_URL - Database connection string (optional, can be passed as argument)');
+      console.log('  UPLOADTHING_SECRET - UploadThing API secret');
+      console.log('  UPLOADTHING_APP_ID - UploadThing app ID');
       break;
   }
 }
