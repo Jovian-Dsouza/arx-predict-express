@@ -25,13 +25,20 @@ export class PriceService {
         prob: probs[0]!
       }
 
-      // Add new entries to the beginning of the list
+      // Store in Redis cache
       await redisClient.lPush(key, JSON.stringify(priceEntry));
-
-      // Trim to keep only the latest MAX_ENTRIES
       await redisClient.lTrim(key, 0, this.MAX_ENTRIES - 1);
 
-      console.log(`✅ Added price entry for market ${marketId}`);
+      // Store in database for persistence
+      await prisma.marketPrice.create({
+        data: {
+          marketId,
+          timestamp: new Date(timestamp),
+          prob: probs[0]!
+        }
+      });
+
+      console.log(`✅ Added price entry for market ${marketId} (Redis + DB persistence)`);
     } catch (error) {
       console.error(`❌ Failed to add market prices for ${marketId}:`, error);
       throw error;
@@ -53,14 +60,46 @@ export class PriceService {
     
     try {
       const creationTime = marketData.createdAt.toISOString();
-      const initialPice = {
+      const initialPrice = {
         timestamp: creationTime,
         prob: 0.5,
-      } 
+      };
+      
+      // Try to get from Redis cache first
       const key = this.getMarketKey(marketId);
       const rawEntries = await redisClient.lRange(key, 0, -1);
-      const prices = rawEntries.map(entry => JSON.parse(entry) as PriceEntry);
-      return [initialPice, ...prices];
+      
+      if (rawEntries.length > 0) {
+        // Return from Redis cache
+        const prices = rawEntries.map(entry => JSON.parse(entry) as PriceEntry);
+        return [initialPrice, ...prices];
+      } else {
+        // Fallback to database
+        console.log(`📊 Redis cache miss for market ${marketId}, fetching from database`);
+        const dbPrices = await prisma.marketPrice.findMany({
+          where: { marketId },
+          orderBy: { timestamp: 'desc' },
+          take: this.MAX_ENTRIES
+        });
+        
+        const prices = dbPrices.map((price: any) => ({
+          timestamp: price.timestamp.toISOString(),
+          prob: price.prob
+        }));
+        
+        // Repopulate Redis cache
+        if (prices.length > 0) {
+          const pipeline = redisClient.multi();
+          prices.forEach((price: PriceEntry) => {
+            pipeline.lPush(key, JSON.stringify(price));
+          });
+          pipeline.lTrim(key, 0, this.MAX_ENTRIES - 1);
+          await pipeline.exec();
+          console.log(`🔄 Repopulated Redis cache for market ${marketId} with ${prices.length} entries`);
+        }
+        
+        return [initialPrice, ...prices];
+      }
     } catch (error) {
       console.error(`❌ Failed to get market prices for ${marketId}:`, error);
       throw error;
@@ -111,8 +150,16 @@ export class PriceService {
   static async clearMarketPrices(marketId: string): Promise<void> {
     try {
       const key = this.getMarketKey(marketId);
+      
+      // Clear from Redis cache
       await redisClient.del(key);
-      console.log(`✅ Cleared price data for market ${marketId}`);
+      
+      // Clear from database
+      await prisma.marketPrice.deleteMany({
+        where: { marketId }
+      });
+      
+      console.log(`✅ Cleared price data for market ${marketId} (Redis + DB)`);
     } catch (error) {
       console.error(`❌ Failed to clear price data for market ${marketId}:`, error);
       throw error;

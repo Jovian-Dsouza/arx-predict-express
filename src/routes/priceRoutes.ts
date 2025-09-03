@@ -52,23 +52,23 @@ router.get('/markets', async (_req, res) => {
  * DELETE /api/prices/markets/:marketId
  * Clear price data for a specific market
  */
-router.delete('/markets/:marketId', async (req, res) => {
-  try {
-    const { marketId } = req.params;
-    await PriceService.clearMarketPrices(marketId);
+// router.delete('/markets/:marketId', async (req, res) => {
+//   try {
+//     const { marketId } = req.params;
+//     await PriceService.clearMarketPrices(marketId);
     
-    return res.json({ 
-      message: `Price data cleared for market ${marketId}`,
-      marketId 
-    });
-  } catch (error) {
-    console.error('❌ Error clearing market prices:', error);
-    return res.status(500).json({ 
-      error: 'Failed to clear market prices',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
+//     return res.json({ 
+//       message: `Price data cleared for market ${marketId}`,
+//       marketId 
+//     });
+//   } catch (error) {
+//     console.error('❌ Error clearing market prices:', error);
+//     return res.status(500).json({ 
+//       error: 'Failed to clear market prices',
+//       details: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// });
 
 /**
  * GET /api/prices/health

@@ -31,6 +31,21 @@ model Market {
   createdAt                             DateTime @default(now())
   updatedAt                             DateTime @updatedAt
   image                                 String?
+  prices                                MarketPrice[]
 
   @@map("markets")
+}
+
+model MarketPrice {
+  id        Int      @id @default(autoincrement())
+  marketId  String
+  timestamp DateTime
+  prob      Float
+  createdAt DateTime @default(now())
+  market    Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@index([marketId])
+  @@index([timestamp])
+  @@index([marketId, timestamp])
+  @@map("market_prices")
 }
