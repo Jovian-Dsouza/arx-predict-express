@@ -8,30 +8,30 @@ datasource db {
 }
 
 model Market {
-  id                                    String   @id
-  authority                             String
-  question                              String
-  options                               String[]
-  probs                                 Float[]
-  votes                                 BigInt[] 
-  liquidityParameter                    BigInt
-  mint                                  String
-  tvl                                   BigInt
-  status                                String
-  marketUpdatedAt                       BigInt
-  winningOption                         Int?
-  numBuyEvents                          Int     @default(0)
-  numSellEvents                         Int     @default(0)
-  lastSellSharesEventTimestamp          DateTime?
-  lastBuySharesEventTimestamp           DateTime?
-  lastClaimRewardsEventTimestamp        DateTime?
-  lastRevealProbsEventTimestamp         DateTime?
-  lastClaimMarketFundsEventTimestamp    DateTime?
-  lastMarketSettledEventTimestamp       DateTime?
-  createdAt                             DateTime @default(now())
-  updatedAt                             DateTime @updatedAt
-  image                                 String?
-  prices                                MarketPrice[]
+  id                                 String        @id
+  authority                          String
+  question                           String
+  options                            String[]
+  probs                              Float[]
+  votes                              BigInt[]
+  liquidityParameter                 BigInt
+  mint                               String
+  tvl                                BigInt
+  status                             String
+  marketUpdatedAt                    BigInt
+  winningOption                      Int?
+  numBuyEvents                       Int           @default(0)
+  numSellEvents                      Int           @default(0)
+  lastSellSharesEventTimestamp       DateTime?
+  lastBuySharesEventTimestamp        DateTime?
+  lastClaimRewardsEventTimestamp     DateTime?
+  lastRevealProbsEventTimestamp      DateTime?
+  lastClaimMarketFundsEventTimestamp DateTime?
+  lastMarketSettledEventTimestamp    DateTime?
+  createdAt                          DateTime      @default(now())
+  updatedAt                          DateTime      @updatedAt
+  image                              String?
+  prices                             MarketPrice[]
 
   @@map("markets")
 }

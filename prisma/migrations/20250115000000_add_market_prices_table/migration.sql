@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "market_prices" (
-    "id" SERIAL PRIMARY KEY,
+    "id" SERIAL,
     "marketId" TEXT NOT NULL,
     "timestamp" TIMESTAMP(3) NOT NULL,
     "prob" DOUBLE PRECISION NOT NULL,
