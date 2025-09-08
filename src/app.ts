@@ -168,6 +168,7 @@ const startServer = async () => {
     }
 
     // Initialize Ably service
+    console.log('Initializing Ably service');
     try {
       await initializeAbly();
       console.log('✅ Ably service initialized successfully');
