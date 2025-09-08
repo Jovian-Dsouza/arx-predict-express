@@ -22,7 +22,7 @@ import { SolanaEventMonitor, solanaEventQueue } from './services/solanaEventMoni
 import { processSolanaEvent } from './services/solanaEventQueueProcessor';
 
 // Import Ably service
-import { initializeAbly, closeAblyConnection } from './services/ablyService';
+// import { initializeAbly, closeAblyConnection } from './services/ablyService';
 
 // Import cron service
 import cronService from './services/cronService';
@@ -128,7 +128,7 @@ process.on('SIGTERM', async () => {
   await closeConnections();
   await solanaEventQueue.close();
   cronService.shutdown();
-  await closeAblyConnection();
+  // await closeAblyConnection();
   process.exit(0);
 });
 
@@ -137,7 +137,7 @@ process.on('SIGINT', async () => {
   await closeConnections();
   await solanaEventQueue.close();
   cronService.shutdown();
-  await closeAblyConnection();
+  // await closeAblyConnection();
   process.exit(0);
 });
 
