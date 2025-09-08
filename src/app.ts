@@ -168,14 +168,14 @@ const startServer = async () => {
     }
 
     // Initialize Ably service
-    console.log('Initializing Ably service');
-    try {
-      await initializeAbly();
-      console.log('✅ Ably service initialized successfully');
-    } catch (ablyError) {
-      const errorMessage = ablyError instanceof Error ? ablyError.message : 'Unknown error';
-      console.warn('⚠️  Ably service failed to initialize, continuing without it:', errorMessage);
-    }
+    // console.log('Initializing Ably service');
+    // try {
+    //   await initializeAbly();
+    //   console.log('✅ Ably service initialized successfully');
+    // } catch (ablyError) {
+    //   const errorMessage = ablyError instanceof Error ? ablyError.message : 'Unknown error';
+    //   console.warn('⚠️  Ably service failed to initialize, continuing without it:', errorMessage);
+    // }
 
     // Initialize Solana event monitor
     let solanaMonitor: SolanaEventMonitor | null = null;
