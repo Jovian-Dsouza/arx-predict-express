@@ -55,53 +55,53 @@ services:
           memory: 256M
 
   # Express Server
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    container_name: arx-predict-app-prod
-    restart: unless-stopped
-    ports:
-      - "3001:3001" 
-    environment:
-      NODE_ENV: production
-      PORT: 3001
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      FRONTEND_URL: ${FRONTEND_URL}
-      ABLY_API_KEY: ${ABLY_API_KEY}
-      ABLY_APP_ID: ${ABLY_APP_ID}
-      HELIUS_API_KEY: ${HELIUS_API_KEY}
-      HELIUS_WEBHOOK_SECRET: ${HELIUS_WEBHOOK_SECRET}
-      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
-      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
-      SOLANA_RPC_URL: ${SOLANA_RPC_URL}
-      SOLANA_PROGRAM_ID: ${SOLANA_PROGRAM_ID}
-      WALLET_PRIVATE_KEY: ${WALLET_PRIVATE_KEY}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - arx-network-prod
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 60s
-      timeout: 15s
-      retries: 3
-      start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     target: production
+  #   container_name: arx-predict-app-prod
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3001:3001" 
+  #   environment:
+  #     NODE_ENV: production
+  #     PORT: 3001
+  #     DATABASE_URL: ${DATABASE_URL}
+  #     REDIS_URL: redis://redis:6379
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     FRONTEND_URL: ${FRONTEND_URL}
+  #     ABLY_API_KEY: ${ABLY_API_KEY}
+  #     ABLY_APP_ID: ${ABLY_APP_ID}
+  #     HELIUS_API_KEY: ${HELIUS_API_KEY}
+  #     HELIUS_WEBHOOK_SECRET: ${HELIUS_WEBHOOK_SECRET}
+  #     RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+  #     RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+  #     SOLANA_RPC_URL: ${SOLANA_RPC_URL}
+  #     SOLANA_PROGRAM_ID: ${SOLANA_PROGRAM_ID}
+  #     WALLET_PRIVATE_KEY: ${WALLET_PRIVATE_KEY}
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - arx-network-prod
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+  #     interval: 60s
+  #     timeout: 15s
+  #     retries: 3
+  #     start_period: 60s
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 1G
+  #         cpus: '1.0'
+  #       reservations:
+  #         memory: 512M
+  #         cpus: '0.5'
 
   # Nginx Reverse Proxy
   nginx:
