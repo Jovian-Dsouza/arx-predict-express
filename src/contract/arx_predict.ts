@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/arx_predict.json`.
  */
 export type ArxPredict = {
-  "address": "GYP8ZjJ7eis3S8kTaGnotSiCDBJ2zphNUb1TkqD3Qknf",
+  "address": "QwUyXjr6YcSmtzqcigtTHDy9fAStMYGxsQgn7Rzrwj9",
   "metadata": {
     "name": "arxPredict",
     "version": "0.1.0",
@@ -69,6 +69,35 @@ export type ArxPredict = {
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
+        },
+        {
+          "name": "signPdaAccount",
+          "docs": [
+            "Sign PDA account for Arcium computations"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "authority",
@@ -183,11 +212,6 @@ export type ArxPredict = {
         179
       ],
       "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
@@ -468,6 +492,35 @@ export type ArxPredict = {
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
         },
         {
+          "name": "signPdaAccount",
+          "docs": [
+            "Sign PDA account for Arcium computations"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "authority",
           "relations": [
             "marketAcc"
@@ -554,11 +607,6 @@ export type ArxPredict = {
         126
       ],
       "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
@@ -652,6 +700,35 @@ export type ArxPredict = {
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
+        },
+        {
+          "name": "signPdaAccount",
+          "docs": [
+            "Sign PDA account for Arcium computations"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "tokenProgram",
@@ -798,6 +875,35 @@ export type ArxPredict = {
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
+        },
+        {
+          "name": "signPdaAccount",
+          "docs": [
+            "Sign PDA account for Arcium computations"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "userPositionAcc",
@@ -1100,11 +1206,6 @@ export type ArxPredict = {
       ],
       "accounts": [
         {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
         },
@@ -1315,11 +1416,6 @@ export type ArxPredict = {
       ],
       "accounts": [
         {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
         },
@@ -1409,11 +1505,6 @@ export type ArxPredict = {
         11
       ],
       "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
@@ -1509,6 +1600,35 @@ export type ArxPredict = {
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
         },
         {
+          "name": "signPdaAccount",
+          "docs": [
+            "Sign PDA account for Arcium computations"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "marketAcc",
           "writable": true,
           "pda": {
@@ -1556,11 +1676,6 @@ export type ArxPredict = {
         181
       ],
       "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
@@ -1654,6 +1769,35 @@ export type ArxPredict = {
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
+        },
+        {
+          "name": "signPdaAccount",
+          "docs": [
+            "Sign PDA account for Arcium computations"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "authority",
@@ -1768,11 +1912,6 @@ export type ArxPredict = {
         155
       ],
       "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
@@ -2061,6 +2200,35 @@ export type ArxPredict = {
         {
           "name": "arciumProgram",
           "address": "BKck65TgoKRokMjQM3datB9oRwJ8rAj2jxPXvHXUvcL6"
+        },
+        {
+          "name": "signPdaAccount",
+          "docs": [
+            "Sign PDA account for Arcium computations"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "marketAcc",
@@ -2373,6 +2541,19 @@ export type ArxPredict = {
       ]
     },
     {
+      "name": "signerAccount",
+      "discriminator": [
+        127,
+        212,
+        7,
+        180,
+        17,
+        50,
+        249,
+        193
+      ]
+    },
+    {
       "name": "userPosition",
       "discriminator": [
         251,
@@ -2466,19 +2647,6 @@ export type ArxPredict = {
       ]
     },
     {
-      "name": "revealResultEvent",
-      "discriminator": [
-        20,
-        154,
-        125,
-        179,
-        190,
-        191,
-        232,
-        228
-      ]
-    },
-    {
       "name": "sellSharesEvent",
       "discriminator": [
         146,
@@ -2489,19 +2657,6 @@ export type ArxPredict = {
         82,
         93,
         252
-      ]
-    },
-    {
-      "name": "voteEvent",
-      "discriminator": [
-        195,
-        71,
-        250,
-        105,
-        120,
-        119,
-        234,
-        134
       ]
     }
   ],
@@ -2663,7 +2818,7 @@ export type ArxPredict = {
             "name": "field0",
             "type": {
               "defined": {
-                "name": "buySharesTupleStruct0"
+                "name": "buySharesOutputStruct0"
               }
             }
           }
@@ -2671,7 +2826,7 @@ export type ArxPredict = {
       }
     },
     {
-      "name": "buySharesTupleStruct0",
+      "name": "buySharesOutputStruct0",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2793,7 +2948,7 @@ export type ArxPredict = {
             "name": "field0",
             "type": {
               "defined": {
-                "name": "claimRewardsTupleStruct0"
+                "name": "claimRewardsOutputStruct0"
               }
             }
           }
@@ -2801,7 +2956,7 @@ export type ArxPredict = {
       }
     },
     {
-      "name": "claimRewardsTupleStruct0",
+      "name": "claimRewardsOutputStruct0",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3009,15 +3164,6 @@ export type ArxPredict = {
               "defined": {
                 "name": "computationSignature"
               }
-            }
-          },
-          {
-            "name": "callbackDiscriminator",
-            "type": {
-              "array": [
-                "u8",
-                8
-              ]
             }
           }
         ]
@@ -3608,7 +3754,7 @@ export type ArxPredict = {
             "name": "field0",
             "type": {
               "defined": {
-                "name": "revealMarketTupleStruct0"
+                "name": "revealMarketOutputStruct0"
               }
             }
           }
@@ -3616,7 +3762,7 @@ export type ArxPredict = {
       }
     },
     {
-      "name": "revealMarketTupleStruct0",
+      "name": "revealMarketOutputStruct0",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3688,7 +3834,7 @@ export type ArxPredict = {
             "name": "field0",
             "type": {
               "defined": {
-                "name": "revealProbsTupleStruct0"
+                "name": "revealProbsOutputStruct0"
               }
             }
           }
@@ -3696,7 +3842,7 @@ export type ArxPredict = {
       }
     },
     {
-      "name": "revealProbsTupleStruct0",
+      "name": "revealProbsOutputStruct0",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3717,22 +3863,6 @@ export type ArxPredict = {
                 2
               ]
             }
-          }
-        ]
-      }
-    },
-    {
-      "name": "revealResultEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "marketId",
-            "type": "u32"
-          },
-          {
-            "name": "output",
-            "type": "u8"
           }
         ]
       }
@@ -3778,7 +3908,7 @@ export type ArxPredict = {
             "name": "field0",
             "type": {
               "defined": {
-                "name": "sellSharesTupleStruct0"
+                "name": "sellSharesOutputStruct0"
               }
             }
           }
@@ -3786,7 +3916,7 @@ export type ArxPredict = {
       }
     },
     {
-      "name": "sellSharesTupleStruct0",
+      "name": "sellSharesOutputStruct0",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3824,6 +3954,18 @@ export type ArxPredict = {
           },
           {
             "name": "field3",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "signerAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
             "type": "u8"
           }
         ]
@@ -3875,30 +4017,6 @@ export type ArxPredict = {
           {
             "name": "marketId",
             "type": "u32"
-          }
-        ]
-      }
-    },
-    {
-      "name": "voteEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "marketId",
-            "type": "u32"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          },
-          {
-            "name": "totalVotes",
-            "type": "u64"
-          },
-          {
-            "name": "amount",
-            "type": "u64"
           }
         ]
       }

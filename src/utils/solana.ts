@@ -73,7 +73,7 @@ export async function revealProbs(marketId: number) {
     console.log("Revealing probs for market", marketId);
     console.log("Wallet public key:", wallet.publicKey.toBase58());
 
-    const clusterOffset = 1116522165;
+    const clusterOffset = 1078779259;
     const clusterAccount = getClusterAccAddress(clusterOffset);
     const revealComputationOffset = new BN(randomBytes(8), "hex");
     const revealQueueSig = await program.methods
