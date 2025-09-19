@@ -6,16 +6,16 @@ dotenv.config();
 
 // Prisma Client
 export const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  log: process.env['NODE_ENV'] === 'development' ? ['query', 'error', 'warn'] : ['error'],
 });
 
 // Redis Client
 const redisOptions: any = {
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  url: process.env['REDIS_URL'] || 'redis://localhost:6379',
 };
 
-if (process.env.REDIS_PASSWORD) {
-  redisOptions.password = process.env.REDIS_PASSWORD;
+if (process.env['REDIS_PASSWORD']) {
+  redisOptions.password = process.env['REDIS_PASSWORD'];
 }
 
 export const redisClient = createClient(redisOptions);

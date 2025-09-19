@@ -14,7 +14,8 @@
     "db:migrate:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "db:seed": "ts-node src/prisma/seed.ts",
-    "upload:images": "ts-node src/scripts/uploadMarketImages.ts"
+    "upload:images": "ts-node src/scripts/uploadMarketImages.ts",
+    "clear:markets": "ts-node src/scripts/clearMarkets.ts"
   },
   "keywords": [
     "express",
